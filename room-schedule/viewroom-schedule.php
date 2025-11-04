@@ -1,95 +1,75 @@
-<?php
-// Add these at the top of viewroomlist.php
-require_once '../tools/functions.php';  // Add this line
-  
-?>
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="page-title-box">
-                <h1 class="page-title">ROOM SCHEDULE</h1>
+                <h1 class="page-title">Room Utilization</h1>
             </div>
         </div>
     </div>
-    <div class="modal-container"></div>
-    <div class="row">
-        <div class="col-12">
-            <div class="card p-4">
-                <?php
-                    require_once '../classes/room-status.class.php';
-                    session_start();
-                    $roomObj = new RoomStatus();   
-                ?>
-                
-                <div class="card-body p-1 pt-2">
-                    <div class="d-flex ct1 flex-row align-items-start gap-5">
-                        <div class="input-group w-100">
-                            <input type="text" class="form-control form-control-light" id="custom-search" placeholder="Search ...">
-                            <span class="input-group-text bg-primary border-primary text-white brand-bg-color">
-                                <i class="bi bi-search"></i>
-                            </span>
-                        </div>
-                        <?php if (hasPermission('admin')): ?>
-                            <a id="add-room-status" href="#" class="btn admin btn-primary open-modal-button">Add Room Status</a>
-                        <?php endif; ?>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="table-room-schedule" class="table table-centered table-nowrap table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Room Name</th>
-                                    <th>Room Type</th>
-                                    <th>Subject Code</th>
-                                    <th>Subject Type</th>
-                                    <th>Section Name</th>
-                                    <th>Start Time</th>
-                                    <th>End Time</th>
-                                    <th>Teacher</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                <?php
-                                    $i = 1;
-                                    $array = $roomObj->showAllStatus();
-                                    
-                                    foreach ($array as $arr) {
-                                ?>
-                                    <tr>
-                                        <td><?= $i ?></td>
-                                        <td><?= $arr['room_name'] ?></td>
-                                        <td><?= $arr['room_type'] ?></td>
-                                        <td><?= $arr['subject_code'] ?></td>
-                                        <td><?= $arr['subject_type'] ?></td>
-                                        <td><?= $arr['section_name'] ?></td>
-                                        <td><?= $arr['start_time'] ?></td>
-                                        <td><?= $arr['end_time'] ?></td>
-                                        <td><?= $arr['faculty_name'] ?></td>
-                                        <td><?= $arr['room_status'] ?></td>
-                                        <td class="text-nowrap">
-                                            <a href="" class="btn room-schedule">Schedule</a>
-                                            <a href="" class="btn staff room-status">Occupy</a>
-                                            <?php if (hasPermission('admin')): ?>
-                                                <a href="" class="btn admin edit-room-status" data-id="<?= $arr['class_status_id'] ?>">Edit</a>
-                                                <a href="" class="btn admin display-row">Display</a> <!-- hidden or displayed  -->
-                                                <a href="" class="btn admin delete delete-room-status"data-id="<?= $arr['class_status_id'] ?>">X</a>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php
-                                    $i++;
-                                    
-                                }
-                                ?>
-                            </tbody>
-                        </table>
-                    </div> <!-- end table-responsive-->
-                </div>
+    <div class="card">
+        <div class="card-body">
+            <h2>Scheduled</h2>
+            <div class="mb-0 me-2 d-flex gap-2">
+                <button id="schedule-back" class="btn btn-outline-secondary">Back</button>
             </div>
+            <div class="filter mt-3">
+                <select id="schedule-room" class="form-select w-auto d-inline-block me-2">
+                    <option value="" disabled selected>Select Room</option>
+                    <option value="LR1">LR1</option>
+                    <option value="LR2">LR2</option>
+                </select>
+                <select id="schedule-day" class="form-select w-auto d-inline-block me-2">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                </select>
+                <button id="schedule-continue" class="btn btn-primary brand-bg-color">Continue</button>
+            </div>
+
+    <table id="table-room-schedule" class="table table-bordered">
+        <thead>
+            <tr>
+                <th class="time-slot">Time</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Time slots from 7 AM to 7 PM with 30-minute intervals -->
+            <tr><td>7:00 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>7:30 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>8:00 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>8:30 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>9:00 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>9:30 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>10:00 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>10:30 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>11:00 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>11:30 AM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>12:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>12:30 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>1:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>1:30 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>2:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>2:30 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>3:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>3:30 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>4:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>4:30 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>5:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>5:30 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>6:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>6:30 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>7:00 PM</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+    </table>
         </div>
     </div>
 </div>

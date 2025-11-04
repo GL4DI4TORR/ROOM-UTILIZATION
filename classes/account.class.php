@@ -136,8 +136,26 @@ class Account
         return $data;
     }
 
+    // Check by account_id if an account already exists in account table
+    function accountExistsById($accountId){
+        $sql = "SELECT COUNT(*) FROM account WHERE account_id = :account_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':account_id', $accountId);
+        $count = $query->execute() ? $query->fetchColumn() : 0;
+        return $count > 0;
+    }
+
+    // Update the username in the account table using account_id
+    function updateAccountUsername($accountId, $newUsername){
+        $sql = "UPDATE account SET username = :username WHERE account_id = :account_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':username', $newUsername);
+        $query->bindParam(':account_id', $accountId);
+        return $query->execute();
+    }
+
     function showAllusers($excludeAdmin = 1){
-        $sql = "SELECT * FROM account WHERE is_admin != :excludeAdmin;";
+        $sql = "SELECT * FROM account WHERE account_id != :excludeAdmin;";
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':excludeAdmin', $excludeAdmin);
         $data = null;
@@ -148,7 +166,42 @@ class Account
         return $data;
     }
 
+    function showuserList(){
+        $sql = "SELECT * FROM user_list";
+        $query = $this->db->connect()->prepare($sql);
+        $data = null;
+        if ($query->execute()) {
+            $data = $query->fetchAll();
+        }
+        return $data;
+    }
 
+    function addToUserList($userID, $username, $isAdmin = 0, $isStaff = 0){
+        $sql = "INSERT INTO user_list (user_id, username, is_admin, is_staff) VALUES (:user_id, :username, :is_admin, :is_staff)";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $userID);
+        $query->bindParam(':username', $username);
+        $query->bindParam(':is_admin', $isAdmin);
+        $query->bindParam(':is_staff', $isStaff);
+        return $query->execute();
+    }
+
+    function updateUserList($userID, $username, $isAdmin, $isStaff){
+        $sql = "UPDATE user_list SET username = :username, is_admin = :is_admin, is_staff = :is_staff WHERE user_id = :user_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $userID);
+        $query->bindParam(':username', $username);
+        $query->bindParam(':is_admin', $isAdmin);
+        $query->bindParam(':is_staff', $isStaff);
+        return $query->execute();
+    }
+
+    function deleteFromUserList($userID){
+        $sql = "DELETE FROM user_list WHERE user_id = :user_id";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':user_id', $userID);
+        return $query->execute();
+    }
 }
 
 // $obj = new Account();

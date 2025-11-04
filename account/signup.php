@@ -155,6 +155,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         color: var(--bs-btn-color);
     }
 
+    /* Keep Sign Up button color unchanged on hover */
+    .form-signin .btn-primary{
+        --bs-btn-hover-bg: var(--bs-btn-bg);
+        --bs-btn-hover-border-color: var(--bs-btn-border-color);
+        --bs-btn-hover-color: var(--bs-btn-color);
+    }
+    .form-signin .btn-primary,
+    .form-signin .btn-primary:hover,
+    .form-signin .btn-primary:focus,
+    .form-signin .btn-primary:active,
+    .form-signin .btn-primary:focus-visible{
+        background-color: var(--bs-btn-bg) !important;
+        border-color: var(--bs-btn-border-color) !important;
+        color: var(--bs-btn-color) !important;
+        box-shadow: none;
+    }
+
     .bd-mode-toggle {
         z-index: 1500;
     }
@@ -249,7 +266,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             </div>
 
             <button class="btn btn-primary w-100 py-2" type="submit">Sign Up</button>
-            <p class="mt-5 mb-3 text-body-secondary">&copy; 2024–2025</p>
+            <button class="btn btn-outline-secondary w-100 py-2 mt-2" type="button" onclick="history.back()">Back</button>
+            <p class="mt-5 mb-3 text-body-secondary">&copy; 2025–2026</p>
         </form>
     </main>
     <?php

@@ -10,11 +10,10 @@
             <form action="" method="post" id="form-delete">
                 <div class="mb-2 modal-body d-flex flex-column delete">
                     <div class="icon delete"></div>
-                        <p class="form-label">WARNING! Deleting this schedule will be completely deleted from the database.</p>
-                        <input type="hidden" id="hidden-class-status-id" name="class-status-id">
-                        <input type="hidden" id="hidden-class-day-id" name="class-day-id">
-                        <input type="hidden" id="hidden-class-time-id" name="class-time-id">
-                        <!-- <input type="hidden" id="hidden-class-id" name="class-id"> -->
+                        <p class="form-label">WARNING! Deleting this schedule will completely delete this from the database and the website.</p>
+                        <input type="hidden" id="class-id" name="class-id">
+                        <input type="hidden" id="subject-type" name="subject-type">
+                        <input type="hidden" id="class-day" name="class-day">
                     </div>
                     <div class="modal-footer delete">
                     <button type="button" class="btn btn-secondary modal-close" data-bs-dismiss="modal">Cancel</button>

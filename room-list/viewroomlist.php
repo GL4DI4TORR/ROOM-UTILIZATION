@@ -40,41 +40,31 @@ require_once '../tools/functions.php';  // Add this line
                     $roomObj = new Room();   
                 ?>
                 <div class="d-flex justify-content-between align-items-center">
-                    
+                    <?php /*
                     <form class="d-flex flex-column align-items-start gap-1">
-                        <div class="d-flex align-items-center">
-                            <label for="roomname-filter" class="label-text">Room Name:</label>
-                            <select id="roomname-filter" class="form-select">
-                                <option value="choose">Choose...</option>
-                                <option value="">All</option>
-                                <?php
-                                $roomList = $roomObj->fetchroomList();
-                                foreach ($roomList as $rmlst) {
-                                ?>
-                                    <option value="<?= $rmlst['room_name'] ?>"><?= $rmlst['room_name']?></option>
-                                <?php
-                                }
-                                ?>
-                            </select>
+                        <div class="d-flex width align-items-center">
+                            <P class="me-2 mb-0 label-text">Room Name:</P>
+                            <div class="dropdown">
+                                <input type="text" class="form-control dropdown-input" placeholder="Filter search..." id="dropdown-room-name" name="room-name" >
+                                <input type="hidden" id="hidden-room-id" name="room-id"/>
+                                <div class="dropdown-list" id="dropdown-list-room-name">
+                                    <!-- Options will be populated here by JavaScript -->
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="d-flex align-items-center">
-                            <label for="roomtype-filter" class="me-2 label-text">Room Type:</label>
-                            <select id="roomtype-filter" class="form-select">
-                                <option value="choose">Choose...</option>
-                                <option value="">All</option>
-                                <?php
-                                $roomTypeList = $roomObj->fetchroomType();
-                                foreach ($roomTypeList as $rmt) {
-                                ?>
-                                    <option value="<?= $rmt['room_type_id'] ?>"><?= $rmt['room_type_desc'] ?></option>
-                                <?php
-                                }
-                                ?>
-                            </select>
+
+                        <div class="d-flex width align-items-center">
+                            <P class="me-2 mb-0 label-text">Room Type:</P>
+                            <div class="dropdown">
+                                <input type="text" class="form-control dropdown-input" placeholder="Filter search..." id="dropdown-room-type" name="room-type" >
+                                <input type="hidden" id="hidden-room-type-id" name="room-type-id"/>
+                                <div class="dropdown-list" id="dropdown-list-room-type">
+                                    <!-- Options will be populated here by JavaScript -->
+                                </div>
+                            </div>
                         </div>
                     </form>
-                    
+                    */?>
                     <form class="d-flex me-2">
                         <div class="input-group w-100">
                             <input type="text" class="form-control form-control-light" id="custom-search" placeholder="Search room...">

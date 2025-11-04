@@ -32,7 +32,7 @@ require_once '../tools/functions.php';  // Add this line
                                     <th>First Name</th>
                                     <th>Last Name</th>
                                     <th>Username</th>
-                                    <th>Role</th>
+                                    <th>Account ID</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -48,7 +48,7 @@ require_once '../tools/functions.php';  // Add this line
                                     <td><?= $arr['first_name'] ?></td>
                                     <td><?= $arr['last_name'] ?></td>
                                     <td><?= $arr['username'] ?></td>
-                                    <td><?= $arr['role'] ?></td>
+                                    <td><?= $arr['account_id'] ?></td>
                                 </tr>
 
                                 <?php

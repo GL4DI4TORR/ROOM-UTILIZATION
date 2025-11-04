@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <a class="text-link" href="signup.php">Create an Account</a>
             </div>
 
-            <p class="mt-5 mb-3 text-body-secondary">&copy; 2024–2025</p>
+            <p class="mt-5 mb-3 text-body-secondary">&copy; 2025–2026</p>
         </form>
     <?php
     require_once '../includes/_footer.php';
