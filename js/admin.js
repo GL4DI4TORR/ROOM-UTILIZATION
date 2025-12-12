@@ -1259,13 +1259,13 @@ function saveSubjectDetails(){
 
   //Function for class details, MODAL AJAX
   //add room status
-  function addclassDetails() {
+function addclassDetails() {
     $.ajax({
-      type: "GET", // Use GET request
-      url: "../class-room-status/add-class-detail.html?v=" + new Date().getTime(), // URL for add product view
-      dataType: "html", // Expect HTML response
+      type: "GET",
+      url: "../class-room-status/add-class-detail.html?v=" + new Date().getTime(),
+      dataType: "html",
       success: function (view) {
-        $(".modal-container").html(view); // Load the modal view
+        $(".modal-container").html(view);
         console.log("Modal content loaded successfully.");
         $("#staticBackdrop").modal("show");
         const modal = $('#staticBackdrop');
@@ -1275,11 +1275,11 @@ function saveSubjectDetails(){
         const subjectId = $('#hidden-subject-id');
         customDropdown(subjectText, subjectList, subjectId, "../fetch-data/fetch-subject.php", function(data, dropdownList) {
           $.each(data, function (index, subject) {
-            const displayContent = cleanInput(subject.subject_name || subject.subject_id);
+            const displayContent = cleanInput(`${subject.subject_id}---LC|LAB---${subject.subject_units}`);
             dropdownList.append(
               $("<div>", {
-                text: displayContent, // human readable
-                'data-value': subject.subject_id // ID value
+                text:displayContent,
+                'data-value': subject.subject_id
               })
             );
           });
@@ -1288,22 +1288,16 @@ function saveSubjectDetails(){
         const sectionText= $('#dropdown-section');
         const sectionList = $('#dropdown-list-section');
         const sectionId = $('#hidden-section-id');
-        // fetchSection();//fetchsection
-        // allow free text if not in dropdown: keep hidden id empty when custom text is used
         customDropdown(sectionText, sectionList, sectionId, "../fetch-data/fetch-section.php", function(data, dropdownList) {
           $.each(data, function (index, section) {
             const displayContent = cleanInput(`${section.course_abbr}${section.year_level}${section.section}`);
             dropdownList.append(
               $("<div>", {
-                text: displayContent, // Displayed text
-                'data-value': `${section.course_abbr}|${section.year_level}|${section.section}` // Value attribute
+                text: displayContent,
+                'data-value': `${section.course_abbr}|${section.year_level}|${section.section}`
               })
             );
           });
-        });
-        // clear hidden id if user types their own section
-        sectionText.on('input', function(){
-          sectionId.val('');
         });
 
         const teacherText= $('#dropdown-teacher');
@@ -1313,8 +1307,8 @@ function saveSubjectDetails(){
           $.each(data, function (index, teacher) {
             dropdownList.append(
               $("<div>", {
-                text: teacher.teacher_name, // Displayed text
-                'data-value': teacher.faculty_id // Value attribute
+                text: teacher.teacher_name,
+                'data-value': teacher.faculty_id
               })
             );
           });
@@ -1327,18 +1321,17 @@ function saveSubjectDetails(){
           $.each(data, function (index, teacher) {
             dropdownList.append(
               $("<div>", {
-                text: teacher.teacher_name, // Displayed text
-                'data-value': teacher.faculty_id // Value attribute
+                text: teacher.teacher_name,
+                'data-value': teacher.faculty_id
               })
             );
           });
         });
 
-        // Fix: Update checkbox event handler
+        // Update checkbox event handler
         $('input[name="subject-type[]"]').on("change", function() {
-          // Count checked checkboxes
           const checkedCount = $('input[name="subject-type[]"]:checked').length;
-          // Show div-teacher if both checkboxes are checked
+          
           if (checkedCount === 2) {
             $('#div-teacher').show();
             $('#hidden-teacher-assigned-lab').prop('disabled', false);
@@ -1348,18 +1341,17 @@ function saveSubjectDetails(){
             $('#hidden-teacher-assigned-lab').prop('disabled', true);
             $('#determiner').val('false');
           }
-      
         });
 
         $(".modal-close").on("click", function (e) {
           e.preventDefault();
-          closeModal(modal); // Pass modal to closeModal function
+          closeModal(modal);
         }); 
 
-        // Event listener for the add product form submission
+        // FIXED: Call the correct function
         $("#form-add").on("submit", function (e) {
-        e.preventDefault();
-       saveclassDetails(); // Call function to save product
+          e.preventDefault();
+          saveClassDetails(); // CHANGED: Now calls saveClassDetails instead of saveclassDetails
         });
         
       },
@@ -1367,26 +1359,134 @@ function saveSubjectDetails(){
         alert("An error occurred while loading the modal: " + error);
       }
     });
-  }
-
-     
+}
 
   //Function for class details, php handling
   //save class details
-  function saveclassDetails(){
-    // Debug what's being sent
+// FIND the addclassDetails() function in admin.js (around line 374-472)
+// REPLACE it with this corrected version:
+
+function addclassDetails() {
+    $.ajax({
+      type: "GET",
+      url: "../class-room-status/add-class-detail.html?v=" + new Date().getTime(),
+      dataType: "html",
+      success: function (view) {
+        $(".modal-container").html(view);
+        console.log("Modal content loaded successfully.");
+        $("#staticBackdrop").modal("show");
+        const modal = $('#staticBackdrop');
+        
+        const subjectText= $('#dropdown-subject');
+        const subjectList = $('#dropdown-list-subject');
+        const subjectId = $('#hidden-subject-id');
+        customDropdown(subjectText, subjectList, subjectId, "../fetch-data/fetch-subject.php", function(data, dropdownList) {
+          $.each(data, function (index, subject) {
+            const displayContent = cleanInput(`${subject.subject_id}---LC|LAB---${subject.subject_units}`);
+            dropdownList.append(
+              $("<div>", {
+                text:displayContent,
+                'data-value': subject.subject_id
+              })
+            );
+          });
+        });
+
+        const sectionText= $('#dropdown-section');
+        const sectionList = $('#dropdown-list-section');
+        const sectionId = $('#hidden-section-id');
+        customDropdown(sectionText, sectionList, sectionId, "../fetch-data/fetch-section.php", function(data, dropdownList) {
+          $.each(data, function (index, section) {
+            const displayContent = cleanInput(`${section.course_abbr}${section.year_level}${section.section}`);
+            dropdownList.append(
+              $("<div>", {
+                text: displayContent,
+                'data-value': `${section.course_abbr}|${section.year_level}|${section.section}`
+              })
+            );
+          });
+        });
+
+        const teacherText= $('#dropdown-teacher');
+        const teacherList = $('#dropdown-list-teacher');
+        const teacherId = $('#hidden-teacher-assigned');
+        customDropdown(teacherText, teacherList, teacherId, "../fetch-data/fetch-teacher.php", function(data, dropdownList) {
+          $.each(data, function (index, teacher) {
+            dropdownList.append(
+              $("<div>", {
+                text: teacher.teacher_name,
+                'data-value': teacher.faculty_id
+              })
+            );
+          });
+        });
+
+        const teacherTextLab= $('#dropdown-teacher-lab');
+        const teacherListLab = $('#dropdown-list-teacher-lab');
+        const teacherIdLab = $('#hidden-teacher-assigned-lab');
+        customDropdown(teacherTextLab, teacherListLab, teacherIdLab, "../fetch-data/fetch-teacher.php", function(data, dropdownList) {
+          $.each(data, function (index, teacher) {
+            dropdownList.append(
+              $("<div>", {
+                text: teacher.teacher_name,
+                'data-value': teacher.faculty_id
+              })
+            );
+          });
+        });
+
+        // Update checkbox event handler
+        $('input[name="subject-type[]"]').on("change", function() {
+          const checkedCount = $('input[name="subject-type[]"]:checked').length;
+          
+          if (checkedCount === 2) {
+            $('#div-teacher').show();
+            $('#hidden-teacher-assigned-lab').prop('disabled', false);
+            $('#determiner').val('true');
+          } else {
+            $('#div-teacher').hide();
+            $('#hidden-teacher-assigned-lab').prop('disabled', true);
+            $('#determiner').val('false');
+          }
+        });
+
+        $(".modal-close").on("click", function (e) {
+          e.preventDefault();
+          closeModal(modal);
+        }); 
+
+        // FIXED: Call the correct function
+        $("#form-add").on("submit", function (e) {
+          e.preventDefault();
+          saveClassDetails(); // CHANGED: Now calls saveClassDetails instead of saveclassDetails
+        });
+        
+      },
+      error: function (xhr, status, error) {
+        alert("An error occurred while loading the modal: " + error);
+      }
+    });
+}
+
+// FIND the saveclassDetails() function (around line 475-548)
+// RENAME it to saveClassDetails() and update the URL:
+
+function saveClassDetails(){
     const formClassDetails = $("#form-add").serialize();
     console.log("Sending data:", formClassDetails);
     
     $.ajax({
-      type: "POST", // Use POST request
-      url: "../class-room-status/save-class-detail.php", // URL for saving room
-      data: formClassDetails, // Serialize the form data for submission
-      dataType: "json", // Expect JSON response
+      type: "POST",
+      url: "../class-room-status/save-class-detail.php", // This is the correct URL
+      data: formClassDetails,
+      dataType: "json",
       success: function (response) {
         console.log("Response received:", response);
         if (response.status === "error") {
-          // Handle validation errors 
+          // Clear previous errors
+          $(".is-invalid").removeClass("is-invalid");
+          $(".invalid-feedback").hide();
+          
           if (response.generalErr){
             $("#general-error").removeClass("d-none").html(cleanInput(response.generalErr));
           } else {
@@ -1440,21 +1540,19 @@ function saveSubjectDetails(){
           }
         
         } else if (response.status === "success") {
-          // On success, hide modal and reset form
           $("#staticBackdrop").modal("hide");
-          $("#form-add")[0].reset(); // Reset the form
-          // Optionally, reload page to show new entry
+          $("#form-add")[0].reset();
+          alert(response.message || 'Class details added successfully!');
           viewroomStatus();
         }
       },
       error: function (xhr, status, error) {
-        alert('Failed to load save-room-status.php.');
-        console.error("Error saving php room status:", status, error);
+        alert('Failed to save class details.');
+        console.error("Error saving class details:", status, error);
+        console.error("Response:", xhr.responseText);
       }
-
     });
-  }
-
+}
   function editclassDetails(classId, subType) {
     // Split the composite ID into its parts
       return $.ajax({
