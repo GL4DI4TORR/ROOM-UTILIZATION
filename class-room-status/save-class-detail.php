@@ -37,15 +37,13 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     $section_id = clean_input($_POST['section-id']);
    
-    if(!empty($selected_section) && empty($section_id)){
-        $section_idErr = 'Select a section from the dropdown.';
-    }else if(empty($selected_section)){
+    // Allow manual section (no dropdown required)
+    if(empty($selected_section)){
         $section_idErr = 'Section is required.';
-    }else{//split section id from CS|1|A to the variables
-        $split_sectionID = explode('|', $section_id);
-        $course_abbr = $split_sectionID[0];
-        $year_level = $split_sectionID[1];
-        $section = $split_sectionID[2];
+    }else{
+        $course_abbr = '';
+        $year_level = '';
+        $section = $selected_section;
     }
 
 
@@ -127,27 +125,29 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     
     if(empty($class_id)){
         $class_idErr = 'Class ID is required.';
-    }else if(!preg_match('/^[A-Z]{3,4}\d{6}$/', $class_id)){
-        $class_idErr = 'Class ID must be in the format: 3-4 uppercase letters followed by 6 digits (e.g., ABC123456 or ABCD123456).';
+    }else if(!preg_match('/^[A-Z]+\d{3}$/', $class_id)){
+        $class_idErr = 'Class ID must be uppercase letters followed by 3 digits (e.g., CALC138).';
     }
 
-    if(!empty($selected_subject) && empty($subject_id)){
-        $subject_idErr = 'Select a subject from the dropdown.';
-    } else if(empty($selected_subject)){
+    if(empty($selected_subject)){
         $subject_idErr = 'Subject is required.';
+    } else if(empty($subject_id)){
+        // allow free text subject if no dropdown selection
+        $subject_id = $selected_subject;
     }
 
     $determiner = '';
     $determiner = clean_input($_POST['determiner']);
 
-    if(!empty($selected_teacher) && empty($teacher_assigned)){
-        $teacher_assignedErr = 'Select a teacher from the dropdown.';
-    } else if(empty($selected_teacher)){
+    if(empty($selected_teacher)){
         if($determiner == 'true'){
             $teacher_assignedErr = 'Teacher is required for subject type LEC.';
         }else{
             $teacher_assignedErr = 'Teacher is required.';
         }
+    } else if(empty($teacher_assigned)){
+        // allow free text teacher
+        $teacher_assigned = $selected_teacher;
     }
     
  
@@ -156,10 +156,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         $selected_teacher_lab = clean_input($_POST['teacher-lab']);
         $teacher_assigned_lab = clean_input($_POST['teacher-assigned-lab']);
 
-        if(!empty($selected_teacher_lab) && empty($teacher_assigned_lab)){
-            $teacher_assigned_labErr = 'Select a teacher from the dropdown.';
-        } else if(empty($selected_teacher_lab)){
+        if(empty($selected_teacher_lab)){
             $teacher_assigned_labErr = 'Teacher is required for subject type LAB.';
+        } else if(empty($teacher_assigned_lab)){
+            // allow free text teacher lab
+            $teacher_assigned_lab = $selected_teacher_lab;
         }
 
     }

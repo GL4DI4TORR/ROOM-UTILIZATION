@@ -19,66 +19,87 @@ require_once '../tools/functions.php';  // Add this line
         $roomObj->school_year = $split_PK[1];
     ?>
 
-    <div class="row admin">
-        <div class="col-12">
-            <div class="page-title-box">
-                <h1 class="page-title">SUBJECT LIST</h1>
-            </div>
+<!-- Add this section BEFORE the "CLASS DETAILS LIST" section in viewclass-status.php -->
+
+<div class="row admin">
+    <div class="col-12">
+        <div class="page-title-box">
+            <h1 class="page-title">SUBJECT LIST</h1>
         </div>
     </div>
-    <div class="row admin">
-        <div class="col-12">
-            <div class="card p-4">
-                
-                <div class="card-body p-1 pt-2">
-                    <div class="d-flex ct1 flex-row align-items-start gap-5">
-                        
-                        <div class="input-group w-25">
-                            <input type="text" id="search-subject" class="form-control form-control-light" placeholder="Search class details...">
-                            <span class="input-group-text bg-primary border-primary text-white brand-bg-color">
-                                <i class="bi bi-search"></i>
-                            </span>
-                        </div>
+</div>
 
-                        <a id="change-prospectus" href="#" class="btn admin btn-primary open-modal-button">Change Prospectus</a>
-                        
-                        <div class="input-group w-25">
-                            <select name="prospectus" id="prospectus">
-                                <option value="">2024-2025</option>
-                            </select>
-                        </div>
+<div class="row admin">
+    <div class="col-12">
+        <div class="card p-4">
+            
+            <div class="card-body p-1 pt-2">
+                <div class="d-flex ct1 flex-row align-items-start gap-5">
                     
-                        <!-- 1. Add Class Details   -->
-                        <a id="add-subject-details" href="#" class="btn admin btn-primary open-modal-button">Add Subject</a>
+                    <div class="input-group w-25">
+                        <input type="text" id="search-subject" class="form-control form-control-light" placeholder="Search subjects...">
+                        <span class="input-group-text bg-primary border-primary text-white brand-bg-color">
+                            <i class="bi bi-search"></i>
+                        </span>
                     </div>
 
-                    <div class="table-responsive">
-                        <!-- 2. Table Class Details -->
-                        <table id="table-subject-details" class="table table-centered table-nowrap table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Subject</th>
-                                    <th>Section</th>
-                                    <th>Teacher</th>
-                                    <th>Room</th>
-                                    <th style="width: 30%;">Action</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                               
-                            </tbody>
-                        </table>
-                    </div> <!-- end table-responsive-->
+                    <div class="input-group w-25">
+                        <select name="prospectus" id="prospectus" class="form-select">
+                            <option value="2024-2025" selected>2024-2025</option>
+                            <option value="2023-2024">2023-2024</option>
+                        </select>
+                    </div>
+                
+                    <!-- Add Subject -->
+                    <a id="add-subject-details" href="#" class="btn admin btn-primary">Add Subject</a>
                 </div>
 
+                <div class="table-responsive">
+                    <!-- Table Subject Details -->
+                    <table id="table-subject-details" class="table table-centered table-nowrap table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Subject Code</th>
+                                <th>Description</th>
+                                <th>Total Units</th>
+                                <th>Lec Units</th>
+                                <th>Lab Units</th>
+                                <th style="width: 20%;">Action</th>
+                            </tr>
+                        </thead>
 
+                        <tbody>
+                            <?php
+                                $i = 1;
+                                $array = $roomObj->showAllSubjects();
+                                
+                                foreach ($array as $arr) {
+                            ?>
+                                <tr>
+                                    <td><?= $i ?></td>
+                                    <td><?= $arr['subject_code'] ?></td>
+                                    <td><?= $arr['description'] ?></td>
+                                    <td><?= $arr['total_units'] ?></td>
+                                    <td><?= $arr['lec_units'] ?></td>
+                                    <td><?= $arr['lab_units'] ?></td>
+                                    <td class="text-nowrap">
+                                        <a href="#" class="btn admin edit-subject" data-subjectcode="<?= $arr['subject_code'] ?>">Edit</a>
+                                        <a href="#" class="btn admin delete delete-subject" data-subjectcode="<?= $arr['subject_code'] ?>">Delete</a>
+                                    </td>
+                                </tr>
+                            <?php
+                                $i++;
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div> <!-- end table-responsive-->
             </div>
+
         </div>
     </div>
-
-
+</div>
    
     <div class="row admin">
         <div class="col-12">
@@ -286,8 +307,8 @@ require_once '../tools/functions.php';  // Add this line
                         <div class="input-group w-100">
                      
                         </div>
-                        <?php if (hasPermission('admin')): ?>
-                            <a id="add-room-status" href="#" class="btn admin btn-primary open-modal-button">Add Class Status</a>
+                        <?php if (hasPermission('admin') || hasPermission('staff')): ?>
+                            <a id="add-room-status" href="#" class="btn btn-primary open-modal-button">Add Class Status</a>
                         <?php endif; ?>
                     </div>
                     <div class="table-responsive">

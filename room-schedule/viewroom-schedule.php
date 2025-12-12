@@ -12,11 +12,9 @@
             <div class="mb-0 me-2 d-flex gap-2">
                 <button id="schedule-back" class="btn btn-outline-secondary">Back</button>
             </div>
-            <div class="filter mt-3">
+            <div class="filter mt-3 d-flex flex-wrap gap-2 align-items-center">
                 <select id="schedule-room" class="form-select w-auto d-inline-block me-2">
-                    <option value="" disabled selected>Select Room</option>
-                    <option value="LR1">LR1</option>
-                    <option value="LR2">LR2</option>
+                    <option value="" selected>Select Room</option>
                 </select>
                 <select id="schedule-day" class="form-select w-auto d-inline-block me-2">
                     <option value="Monday">Monday</option>
@@ -27,6 +25,7 @@
                     <option value="Saturday">Saturday</option>
                 </select>
                 <button id="schedule-continue" class="btn btn-primary brand-bg-color">Continue</button>
+                <span class="text-muted small">Select room & day to see scheduled classes</span>
             </div>
 
     <table id="table-room-schedule" class="table table-bordered">

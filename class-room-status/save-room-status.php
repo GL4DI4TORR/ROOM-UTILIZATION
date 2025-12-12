@@ -12,7 +12,9 @@ $semester = $school_year = '';
 $splitclass_PK = $splitsemester_PK = '';
 
 //class id variables
-$class_id = $subject_type = $start_time_1 = $end_time_1 = $start_time_2 = $end_time_2 = $day_id_1 = $day_id_2 =  '';
+$class_id = $subject_type = $start_time_1 = $end_time_1 = $start_time_2 = $end_time_2 = '';
+$day_id_1 = [];
+$day_id_2 = [];
 
 
 //generalErr = For feed general inputs, generallErr1= sched 1 feed, generalErr2= sched 2 feed
@@ -36,7 +38,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $semester = $splitsemester_PK[0];
     $school_year = $splitsemester_PK[1];
     
-    $selected_class = clean_input($_POST['class']);
+    $selected_class = clean_input($_POST['class'] ?? '');
     
     $selected_room_1 = clean_input($_POST['room-input-1']);
     $selected_room_2 = clean_input($_POST['room-input-2']);
@@ -44,17 +46,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $determiner_type = clean_input($_POST['determiner-type']);
 
     
-    // First check if class-id exists in POST
-    if(empty($_POST['class-id'])){
-        $class_idErr = 'Class is required.';
-    }else if(!empty($selected_class) && empty($_POST['class-id'])){
-        $class_idErr = 'Select a class from the dropdown.';
-    }else{
-        $class_id = clean_input($_POST['class-id']);
+    // Capture class id and fallback to text input if provided
+    $class_id = clean_input($_POST['class-id'] ?? ($_POST['class'] ?? ''));
+    if(empty($class_id)){
+        $class_idErr = 'Please select a class from the dropdown.';
     }
     
     $subject_type = [];
- 
+
     if(empty($_POST['subject-type'])){
         $generalErr = '<strong>SUBJECT TYPE REQUIRED!</strong><br>Atleast check <strong>1</strong> subject type.';
         $subject_typeErr = 'Invalid, missing input.';
@@ -64,6 +63,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
             $subject_type[] = clean_input($type);
         }
     }
+
+    // Days (ensure arrays to avoid warnings)
+    $day_id_1 = isset($_POST['day-id-1']) && is_array($_POST['day-id-1']) ? $_POST['day-id-1'] : [];
+    $day_id_2 = isset($_POST['day-id-2']) && is_array($_POST['day-id-2']) ? $_POST['day-id-2'] : [];
 
     
 
@@ -208,11 +211,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     }
      
     if($determiner_type == 'false'){
-        $start_time_1 =  clean_input($_POST['start-time-1']);
-        $end_time_1 = clean_input($_POST['end-time-1']);
+        $start_time_1 =  clean_input($_POST['start-time-1'] ?? '');
+        $end_time_1 = clean_input($_POST['end-time-1'] ?? '');
 
         if(empty($start_time_1)){
-            $start_time_1Err = 'Start time is required is required.';
+            $start_time_1Err = 'Start time is required.';
+        }
+        
+        if(empty($end_time_1)){
+            $end_time_1Err = 'End time is required.';
+        }
+        if(empty($start_time_1)){
+            $start_time_1Err = 'Start time is required.';
         }
         
         if(empty($end_time_1)){

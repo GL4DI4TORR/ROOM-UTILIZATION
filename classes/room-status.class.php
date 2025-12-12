@@ -58,7 +58,7 @@ class RoomStatus{
     public $week_day = '';
     public $id = '';
     
-    protected $db;
+    public $db;
     
     function __construct(){
         $this->db = new Database();
@@ -164,8 +164,53 @@ class RoomStatus{
         return true;
     }
 
+function checkSubjectExists($subject_code){
+    $sql = "SELECT COUNT(*) as count FROM subject_details WHERE subject_code = :subject_code";
+    $query = $this->db->connect()->prepare($sql);
+    $query->bindParam(':subject_code', $subject_code);
+    $query->execute();
+    $result = $query->fetch();
+    return $result['count'] > 0;
+}
 
+function showAllSubjects($prospectus_id = null){
+    // If a prospectus id is provided, filter; otherwise, return all subjects
+    if ($prospectus_id !== null) {
+        $sql = "SELECT 
+                    subject_code,
+                    description,
+                    total_units,
+                    lec_units,
+                    lab_units,
+                    subject_prospectus_id
+                FROM subject_details
+                WHERE subject_prospectus_id = :prospectus_id
+                ORDER BY subject_code ASC";
+    } else {
+        $sql = "SELECT 
+                    subject_code,
+                    description,
+                    total_units,
+                    lec_units,
+                    lab_units,
+                    subject_prospectus_id
+                FROM subject_details
+                ORDER BY subject_code ASC";
+    }
     
+    $query = $this->db->connect()->prepare($sql);
+    if ($prospectus_id !== null) {
+        $query->bindParam(':prospectus_id', $prospectus_id);
+    }
+    
+    $data = null;
+    if ($query->execute()) {
+        $data = $query->fetchAll();
+    }
+    return $data;
+}
+    
+
     function insertClassTime(){
         $sql = "INSERT INTO class_time (class_id, subject_id, start_time, end_time) VALUES (:class_id, :subject_id, :start_time, :end_time);";
         $query = $this->db->connect()->prepare($sql);
@@ -190,6 +235,55 @@ class RoomStatus{
         $this->insertStatus();
 
         return true;
+    }
+
+    /**
+     * Fetch class schedule for the current semester/school year.
+     * Optionally filter by room and day.
+     */
+    public function fetchSchedule($semester, $school_year, $room_code = null, $room_no = null, $day = null){
+        $sql = "SELECT
+                    sched.day AS class_day,
+                    sched.start_time,
+                    sched.end_time,
+                    sched.room_code,
+                    sched.room_no,
+                    class.subject_id AS subject_code,
+                    CONCAT(class.course_abbr, class.year_level, class.section) AS section_name,
+                    CONCAT(acc.last_name, ', ', acc.first_name) AS teacher_name
+                FROM class_schedule sched
+                LEFT JOIN class_details class ON sched.class_id = class.class_id AND sched.subject_type = class.subject_type
+                LEFT JOIN faculty_list fac ON class.teacher_assigned = fac.faculty_id
+                LEFT JOIN user_list usr ON fac.user_id = usr.user_id
+                LEFT JOIN account acc ON usr.user_id = acc.account_id
+                WHERE sched.semester = :semester AND sched.school_year = :school_year";
+
+        if ($room_code !== null && $room_no !== null) {
+            $sql .= " AND sched.room_code = :room_code AND sched.room_no = :room_no";
+        }
+        if ($day !== null) {
+            $sql .= " AND sched.day = :day";
+        }
+
+        $sql .= " ORDER BY sched.start_time ASC";
+
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':semester', $semester);
+        $query->bindParam(':school_year', $school_year);
+
+        if ($room_code !== null && $room_no !== null) {
+            $query->bindParam(':room_code', $room_code);
+            $query->bindParam(':room_no', $room_no);
+        }
+        if ($day !== null) {
+            $query->bindParam(':day', $day);
+        }
+
+        $data = null;
+        if ($query->execute()) {
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return $data;
     }
 
     function insertStatus(){
@@ -782,9 +876,11 @@ class RoomStatus{
     //for filter dropdown search subject code
     public function fetchsubjectOption(){
         $sql = 
-        " SELECT sub.subject_code AS subject_id, CONCAT(sub.lec_units,'|',sub.lab_units) AS subject_units
-
-        FROM subject_details sub;";
+        " SELECT 
+            sub.subject_code AS subject_id, 
+            sub.description AS subject_name,
+            CONCAT(sub.lec_units,'|',sub.lab_units) AS subject_units
+          FROM subject_details sub";
         $query = $this->db->connect()->prepare($sql);
         $data = null;
         if ($query->execute()) {
