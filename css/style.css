@@ -625,7 +625,7 @@ a.nav-link{
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 100%;
-  max-height: 150px;
+  max-height: 300px; /* increased so more items are visible before scrolling */
   overflow-y: auto;
   z-index: 1;
 }

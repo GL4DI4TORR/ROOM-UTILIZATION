@@ -944,7 +944,7 @@ $("#prospectus").on("change", function() {
       url: "../admin/add-user.html?v=" + new Date().getTime(),
       dataType: "html",
       success: function(view){
-        $(".modal-container").html(view);
+        $(".modal-container").first().html(view);
         $("#staticBackdrop").modal("show");
         const modal = $('#staticBackdrop');
         $(".modal-close").off("click").on("click", function (e) { e.preventDefault(); closeModal(modal); });
@@ -980,7 +980,7 @@ $("#prospectus").on("change", function() {
       url: "../admin/edit-user.html?v=" + new Date().getTime(),
       dataType: "html",
       success: function(view){
-        $(".modal-container").html(view);
+        $(".modal-container").first().html(view);
         $("#staticBackdrop").modal("show");
         const modal = $('#staticBackdrop');
         $('#user-id').val(data.user_id);
@@ -1393,7 +1393,7 @@ function addsubjectDetails() {
       url: "../class-room-status/add-subject-details.html?v=" + new Date().getTime(),
       dataType: "html",
       success: function (view) {
-        $(".modal-container").html(view);
+        $(".modal-container").first().html(view);
         console.log("Modal content loaded successfully.");
         $("#staticBackdrop").modal("show");
         
@@ -1589,7 +1589,7 @@ function saveSubjectDetails(){
       url: "../room-list/add.html?v=" + new Date().getTime(), // URL for add product view
       dataType: "html", // Expect HTML response
       success: function (view) {
-        $(".modal-container").html(view); // Load the modal view
+        $(".modal-container").first().html(view); // Load the modal view
         $("#staticBackdrop").modal("show"); // Show the modal
 
         const modal = $('#staticBackdrop');
@@ -1678,7 +1678,7 @@ function addclassDetails() {
       url: "../class-room-status/add-class-detail.html?v=" + new Date().getTime(),
       dataType: "html",
       success: function (view) {
-        $(".modal-container").html(view);
+        $(".modal-container").first().html(view);
         console.log("Modal content loaded successfully.");
         $("#staticBackdrop").modal("show");
         const modal = $('#staticBackdrop');
@@ -1688,10 +1688,10 @@ function addclassDetails() {
         const subjectId = $('#hidden-subject-id');
         customDropdown(subjectText, subjectList, subjectId, "../fetch-data/fetch-subject.php", function(data, dropdownList) {
           $.each(data, function (index, subject) {
-            const displayContent = cleanInput(`${subject.subject_id}---LC|LAB---${subject.subject_units}`);
+            const displayContent = cleanInput(subject.subject_name || subject.description || subject.subject_name);
             dropdownList.append(
               $("<div>", {
-                text:displayContent,
+                text: displayContent,
                 'data-value': subject.subject_id
               })
             );
@@ -1782,7 +1782,7 @@ function addclassDetails() {
       url: "../class-room-status/add-class-detail.html?v=" + new Date().getTime(),
       dataType: "html",
       success: function (view) {
-        $(".modal-container").html(view);
+        $(".modal-container").first().html(view);
         console.log("Modal content loaded successfully.");
         $("#staticBackdrop").modal("show");
         const modal = $('#staticBackdrop');
@@ -1792,10 +1792,10 @@ function addclassDetails() {
         const subjectId = $('#hidden-subject-id');
         customDropdown(subjectText, subjectList, subjectId, "../fetch-data/fetch-subject.php", function(data, dropdownList) {
           $.each(data, function (index, subject) {
-            const displayContent = cleanInput(`${subject.subject_id}---LC|LAB---${subject.subject_units}`);
+            const displayContent = cleanInput(subject.subject_name || subject.description || subject.subject_name);
             dropdownList.append(
               $("<div>", {
-                text:displayContent,
+                text: displayContent,
                 'data-value': subject.subject_id
               })
             );
@@ -2041,7 +2041,7 @@ function saveClassDetails(){
                   const subjectId = $('#hidden-subject-id');
                   customDropdown(subjectText, subjectList, subjectId, "../fetch-data/fetch-subject.php", function(listData, dropdownList) {
                     $.each(listData, function (index, subject) {
-                      const displayContent = cleanInput(`${subject.subject_id}---LC|LAB---${subject.subject_units}`);
+                      const displayContent = cleanInput(subject.subject_name || subject.description || subject.subject_name);
                       dropdownList.append($('<div>', { text: displayContent, 'data-value': subject.subject_id }));
                     });
                     // Pre-select subject if available
@@ -2171,11 +2171,86 @@ function saveClassDetails(){
 
         } else if (response.status === "success") {
           alert('Class details updated successfully.');
+
+          // Update the class details row in the table without a full reload
+          try {
+            const originalClassId = $('#original-class-id').val();
+            const originalSubtype = $('#original-subtype-id').val();
+
+            // New values from the form
+            const newClassId = ($('#class-id').val() || '').trim();
+            const newSubjectText = ($('#dropdown-subject').val() || '').trim();
+            const newSectionText = ($('#dropdown-section').val() || '').trim();
+            const newTeacherText = ($('#dropdown-teacher').val() || '').trim();
+            const newSubtype = $('input[name="subject-type[]"]:checked').val() || $('input[name="subject-type"]:checked').val() || $('.subject-type:checked').val() || $('#original-subtype-id').val();
+
+            // Find the row by the edit button that has matching original identifiers
+            const selector = `#table-class-details a.edit-class-details[data-classid="${originalClassId}"][data-subtype="${originalSubtype}"]`;
+            console.log('Attempting to find row using selector:', selector);
+            let editBtn = $(selector);
+            let row = editBtn.closest('tr');
+
+            // Fallback: try matching only by classid (some rows may not have subtype attr matching)
+            if (!row.length) {
+              const sel2 = `#table-class-details a.edit-class-details[data-classid="${originalClassId}"]`;
+              console.log('Fallback selector by classid:', sel2);
+              editBtn = $(sel2);
+              row = editBtn.closest('tr');
+            }
+
+            // Final fallback: search table cells for matching ID text
+            if (!row.length) {
+              console.log('Fallback: searching table cells for class id text:', originalClassId);
+              row = $('#table-class-details tbody tr').filter(function() {
+                return $(this).find('td').eq(0).text().trim() === String(originalClassId).trim();
+              }).first();
+            }
+
+            console.log('Row found count:', row.length);
+
+            if (row.length) {
+              // Update visible cells: ID, Subject, Section, Teacher
+              row.find('td').eq(0).text(newClassId);
+              row.find('td').eq(1).text(newSubjectText);
+              row.find('td').eq(2).text(newSectionText);
+              row.find('td').eq(3).text(newTeacherText);
+
+              // Update data attributes on action buttons so future edits target the correct row
+              row.find('a.edit-class-details, a.delete-class-details').each(function() {
+                $(this).attr('data-classid', newClassId);
+                $(this).attr('data-subtype', newSubtype);
+              });
+            } else {
+              // Fallback: reload the whole class details list
+              viewroomStatus();
+            }
+            // Also update any class status rows (schedule table) that reference this class
+            try {
+              const scheduleAnchors = $(`#table-room-status`).find(`a[data-classid="${originalClassId}"]`);
+              scheduleAnchors.each(function() {
+                const schedRow = $(this).closest('tr');
+                if (!schedRow.length) return;
+                // Subject (col 3), Subject Type (col 4), Section (col 5), Teacher (col 8)
+                schedRow.find('td').eq(3).text(newSubjectText);
+                schedRow.find('td').eq(4).text(newSubtype);
+                schedRow.find('td').eq(5).text(newSectionText);
+                schedRow.find('td').eq(8).text(newTeacherText);
+
+                // Update data attributes on anchors in this row
+                schedRow.find('a[data-classid]').attr('data-classid', newClassId);
+                schedRow.find('a[data-subjecttype]').attr('data-subjecttype', newSubtype);
+              });
+            } catch (schedErr) {
+              console.error('Error updating schedule rows:', schedErr);
+            }
+          } catch (err) {
+            console.error('Error updating class details row:', err);
+            viewroomStatus();
+          }
+
           // On success, hide modal and reset form
           $("#staticBackdrop").modal("hide");
           $("#form-edit")[0].reset(); // Reset the form
-          // Optionally, reload page to show new entry
-          viewroomStatus();
         }
       },
       error: function (xhr, status, error) {
@@ -2194,7 +2269,7 @@ function saveClassDetails(){
       dataType: "html", // Expect JSON response
       success: function (view) {
         // Assuming 'view' contains the new content you want to display
-        $(".modal-container").empty().html(view); // Load the modal view
+        $(".modal-container").first().empty().html(view); // Load the modal view
         $("#staticBackdrop").modal("show"); // Show the modal
         
 // Then fetch and populate the data

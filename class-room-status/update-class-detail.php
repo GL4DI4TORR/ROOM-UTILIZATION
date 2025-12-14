@@ -226,7 +226,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     
 
     if($roomObj->updateClassDetails()){
-        echo json_encode(['status' => 'success']);
+        // Fetch authoritative updated record for the UI
+        $sql = "SELECT \
+                    class.class_id AS class_id,\n+                    class.subject_type AS subject_type,\n+                    class.subject_id AS subject_code,\n+                    sub.description AS subject_description,\n+                    CONCAT(class.course_abbr, class.year_level, class.section) AS section_name,\n+                    CONCAT(acc.last_name,', ',acc.first_name) AS teacher_name,\n+                    class.teacher_assigned AS teacher_id\n+                FROM class_details class\n+                LEFT JOIN subject_details sub ON class.subject_id = sub.subject_code\n+                LEFT JOIN faculty_list fac ON class.teacher_assigned = fac.faculty_id\n+                LEFT JOIN user_list user ON fac.user_id = user.user_id\n+                LEFT JOIN account acc ON user.user_id = acc.account_id\n+                WHERE class.class_id = :class_id AND class.subject_type = :subject_type LIMIT 1;";
+        $query = $roomObj->db->connect()->prepare($sql);
+        $query->bindParam(':class_id', $roomObj->class_id);
+        $query->bindParam(':subject_type', $roomObj->subject_type);
+        $updated = null;
+        if ($query->execute()) {
+            $updated = $query->fetch(PDO::FETCH_ASSOC);
+        }
+
+        echo json_encode(['status' => 'success', 'data' => $updated]);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Something went wrong when updating the class details.']);
     }
