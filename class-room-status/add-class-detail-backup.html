@@ -71,15 +71,14 @@
 
                 <div class="mb-2">
                     <P class="form-label">Teacher Assigned</P>
-                    <select class="form-control" id="dropdown-teacher" name="teacher-assigned">
-                        <option value="">Select a teacher...</option>
-                        <option value="1">Teacher 1</option>
-                        <option value="2">Teacher 2</option>
-                        <option value="3">Teacher 3</option>
-                        <option value="4">Teacher 4</option>
-                        <option value="5">Teacher 5</option>
-                    </select>
-                    <div class="invalid-feedback"></div>
+                    <div class="dropdown">
+                        <input type="text" class="form-control dropdown-input" placeholder="Select or search..." id="dropdown-teacher" name="teacher-assigned">
+                        <input type="hidden" id="hidden-teacher-assigned" name="teacher-assigned"/>
+                        <div class="dropdown-list" id="dropdown-list-teacher">
+                            <!-- Options will be populated here by JavaScript -->
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
                 </div>
                 
                 <br>
@@ -109,3 +108,5 @@
       </div>
     </div>
   </div>
+
+<script src="../js/fix-teacher-dropdown.js"></script>

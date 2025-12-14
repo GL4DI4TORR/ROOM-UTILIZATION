@@ -1,7 +1,20 @@
 <?php
+session_start();
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require_once('../tools/functions.php');
 require_once('../classes/room-status.class.php');
+
+// Set content type header
+header('Content-Type: application/json');
+
+// Debug log to confirm this script is being called
+error_log("update-class-detail.php script accessed at " . date('Y-m-d H:i:s'));
+
+try {
 
 
 $original_class_id = $original_subject_id = $original_subject_type = $original_section_id = '';
@@ -18,9 +31,11 @@ $roomObj = new RoomStatus();
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
     error_log("POST data received: " . print_r($_POST, true));
-    $original_class_id = clean_input($_POST['original-class-id']);
-    $original_subject_id = clean_input($_POST['original-subject-id']);
-    $original_subject_type = clean_input($_POST['original-subtype-id']);
+    error_log("Session data: " . print_r($_SESSION, true));
+    
+    $original_class_id = isset($_POST['original-class-id']) ? clean_input($_POST['original-class-id']) : '';
+    $original_subject_id = isset($_POST['original-subject-id']) ? clean_input($_POST['original-subject-id']) : '';
+    $original_subject_type = isset($_POST['original-subtype-id']) ? clean_input($_POST['original-subtype-id']) : '';
 
     
     if(!empty($_POST['original-section-id'])){
@@ -33,27 +48,26 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     
     error_log("Original Selected Id: classid=$original_class_id, subjectid=$original_subject_id, sectionid=$original_section_id, teacher=$selected_teacher");
 
-    $selected_subject = clean_input($_POST['subject']);
-    $selected_section = clean_input($_POST['section']);
-    $selected_teacher = clean_input($_POST['teacher']);
+    $selected_subject = isset($_POST['subject']) ? clean_input($_POST['subject']) : '';
+    $selected_section = isset($_POST['section']) ? clean_input($_POST['section']) : '';
+    $selected_teacher = isset($_POST['teacher']) ? clean_input($_POST['teacher']) : '';
 
     $selected_subject = explode(' ', $selected_subject)[0];
 
     error_log("Selected values: section=$selected_section, subject=$selected_subject, teacher=$selected_teacher");
     
-    $class_id = clean_input($_POST['class-id']);
+    $class_id = isset($_POST['class-id']) ? clean_input($_POST['class-id']) : '';
     
-    $subject_id = clean_input($_POST['subject-id']);
+    $subject_id = isset($_POST['subject-id']) ? clean_input($_POST['subject-id']) : '';
 
     $times = 0;
+    $unitDetails = null; // Initialize variable to prevent undefined warning
+    
     if(empty($_POST['subject-type'])){
         $subject_typeErr = 'Subject Type is required.';
     }else{
         $subject_type = $_POST['subject-type'];
-        $unitDetails = '';
-
         $unitDetails = $roomObj->checkSubjectType($subject_id, $subject_type);
-    
     }
 
     if($unitDetails != null){
@@ -75,7 +89,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         exit;
     }
 
-    $section_id = clean_input($_POST['section-id']);
+    $section_id = isset($_POST['section-id']) ? clean_input($_POST['section-id']) : '';
    
     if(!empty($selected_section) && empty($section_id)){
         $section_idErr = 'Select a section from the dropdown.';
@@ -89,14 +103,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     }
 
 
-    $teacher_assigned = clean_input($_POST['teacher-assigned']);
+    $teacher_assigned = isset($_POST['teacher-assigned']) ? clean_input($_POST['teacher-assigned']) : '';
 
     error_log("ID values: class_id=$class_id, section_id=$section_id,  subject_id=$subject_id, teacher_assigned=$teacher_assigned");
     
     if(empty($class_id)){
         $class_idErr = 'Class ID is required.';
-    }else if(!preg_match('/^[A-Z]{3,4}\d{6}$/', $class_id)){
-        $class_idErr = 'Class ID must be in the format: 3-4 uppercase letters followed by 6 digits (e.g., ABC123456 or ABCD123456).';
+    }else if(!preg_match('/^[A-Z]+\d{3}$/', $class_id)){
+        $class_idErr = 'Class ID must be uppercase letters followed by 3 digits (e.g., CALC138).';
     }
 
     if(!empty($selected_subject) && empty($subject_id)){
@@ -115,7 +129,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
 
 
-    if(!empty($class_idErr) || !empty($subject_idErr) || !empty($subject_typErr) || !empty($section_idErr) || !empty($teacher_assignedErr)){
+    if(!empty($class_idErr) || !empty($subject_idErr) || !empty($subject_typeErr) || !empty($section_idErr) || !empty($teacher_assignedErr)){
         echo json_encode([
             'status' => 'error',
             'class_idErr' => $class_idErr,
@@ -214,11 +228,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     if($roomObj->updateClassDetails()){
         echo json_encode(['status' => 'success']);
     } else {
-        echo json_encode(['status ' => 'error', 'message' => 'Something went wrong when adding the new class status.']);
+        echo json_encode(['status' => 'error', 'message' => 'Something went wrong when updating the class details.']);
     }
     exit;
 
+} // End of POST block and try block
 
+} catch (Exception $e) {
+    error_log("Exception in update-class-detail.php: " . $e->getMessage());
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Server error: ' . $e->getMessage()
+    ]);
 }
 
 ?>

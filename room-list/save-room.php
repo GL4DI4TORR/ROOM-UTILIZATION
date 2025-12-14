@@ -28,7 +28,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         }
     }
     
-    $room_type = clean_input($_POST['room-type']);
+    $room_type = clean_input($_POST['room-type-id']);
 
 
     if(!preg_match('/^[A-Z]+ \d+$/', $room_name)){

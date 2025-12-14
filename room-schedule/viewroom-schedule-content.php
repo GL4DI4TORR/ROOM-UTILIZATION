@@ -3,21 +3,29 @@ session_start();
 
 if (isset($_SESSION['account'])) {
     if (!$_SESSION['account']) {
-        header('location: ../account/loginwcss.php');
+        echo json_encode(['error' => 'Not logged in']);
+        exit;
     }
 } else {
-    header('location: ../account/loginwcss.php');
+    echo json_encode(['error' => 'Not logged in']);
+    exit;
 }
-$page_title = "Room Schedule - Student View";
-require_once '../includes/_head.php';
+
+require_once '../tools/functions.php';
+require_once '../classes/room-status.class.php';
+
+$roomObj = new RoomStatus();   
+
+// Handle semester ID - set default if not exists
+$split_PK = $semester_PK = '';
+if (isset($_SESSION['selected_semester_id']) && !empty($_SESSION['selected_semester_id'])) {
+    $semester_PK = $_SESSION['selected_semester_id'];
+    $split_PK = explode('|', $semester_PK);
+    $roomObj->semester = $split_PK[0];
+    $roomObj->school_year = $split_PK[1];
+}
 ?>
-<body id="dashboard">
-    <div class="wrapper">
-        <?php
-        require_once '../includes/_topnav.php';
-        require_once '../includes/_sidebar.php';
-        ?>
-        <div class="content-page px-3">
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -92,12 +100,3 @@ require_once '../includes/_head.php';
         </div>
     </div>
 </div>
-
-        </div>
-    </div>
-    <?php
-    require_once '../includes/_footer.php';
-    ?>
-</body>
-
-</html>

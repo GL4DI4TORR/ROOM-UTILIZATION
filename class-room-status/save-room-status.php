@@ -1,4 +1,12 @@
 <?php
+// Enable error reporting for debugging but disable display
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Set JSON header at the very beginning
+header('Content-Type: application/json');
+
 session_start();
 
 require_once('../tools/functions.php');
@@ -32,7 +40,8 @@ $determiner_type = '';
 
 $roomObj = new RoomStatus();
 
-if($_SERVER['REQUEST_METHOD'] == 'POST'){
+try {
+    if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $semester_PK = clean_input($_SESSION['selected_semester_id']);
     $splitsemester_PK = explode('|', $semester_PK);
     $semester = $splitsemester_PK[0];
@@ -391,25 +400,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
             $roomObj->room_no = $room_noArr[0];
         }
 
-        $classExist = $roomObj->checkClassDayAlreadyExist();
-        if($classExist != null){
-            $occupied_class_id[] = $classExist[0];
-            $occupied_day_name[] = $classExist[1];
-            $occupied_start_time[] = $classExist[2];
-            $occupied_end_time[] = $classExist[3];
-            $occupied_room[] = $classExist[4];
-            $checker1++;
-            
-        }else{
-            $existingTime = $roomObj->checkExistingClassTime();
-            if($existingTime != null){
-                $occupied_class_id[] = $existingTime[0];
-                $occupied_day_name[] = $existingTime[1];
-                $occupied_start_time[] = $existingTime[2];
-                $occupied_end_time[] = $existingTime[3];
-                $occupied_room[] = $existingTime[4];
-                $checker2++;
-            }
+        // Only check for time conflicts, not same class at different times
+        $existingTime = $roomObj->checkExistingClassTime();
+        if($existingTime != null){
+            $occupied_class_id[] = $existingTime[0];
+            $occupied_day_name[] = $existingTime[1];
+            $occupied_start_time[] = $existingTime[2];
+            $occupied_end_time[] = $existingTime[3];
+            $occupied_room[] = $existingTime[4];
+            $checker2++;
         }
     }
 
@@ -458,31 +457,61 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         }
     }else{
         if($checker2 > 0){
-            
-            if($determiner_type == 'false'){//Error feed when single subtype chosen
+            // Build human-readable summary
+            if($determiner_type == 'false'){
                 if($checker == 1){
                     $generalErr1 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule overlaps with class ID '; 
                 }else{
                     $generalErr1 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule overlaps with multiple classes: <br>'; 
                 }
-            }else if($determiner_type == 'true'){//Error feed when 2 subtypes chosen
+            }else if($determiner_type == 'true'){
                 if($checker == 1){
                     $generalErr1 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule for LEC overlaps with class ID '; 
                 }else{
                     $generalErr1 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule for LEC overlaps with multiple classes: <br>'; 
                 }
             }
-    
-            $index = 0;      
+
+            $conflicts = [];
+            $latestEndTs = null;
+            $index = 0;
             foreach($occupied_class_id as $class_id){
+                $conflicts[] = [
+                    'class_id' => $class_id,
+                    'room' => $occupied_room[$index],
+                    'day' => $occupied_day_name[$index],
+                    'start_time' => $occupied_start_time[$index],
+                    'end_time' => $occupied_end_time[$index]
+                ];
+
+                $endTs = strtotime($occupied_end_time[$index]);
+                if($latestEndTs === null || $endTs > $latestEndTs){
+                    $latestEndTs = $endTs;
+                }
                 $generalErr1 .= $class_id . ' on ' . $occupied_room[$index] . ' scheduled by ' . $occupied_day_name[$index] . ' from ' . $occupied_start_time[$index] . ' to ' . $occupied_end_time[$index] . '<br>';
                 $index++;
             }
-            
+
+            // compute suggested next-available slot based on latest conflicting end time
+            $suggested = null;
+            if($latestEndTs !== null){
+                $requestedStartTs = strtotime($start_time_1);
+                $requestedEndTs = strtotime($end_time_1);
+                $duration = $requestedEndTs - $requestedStartTs;
+                $suggestedStart = date('H:i:s', $latestEndTs);
+                $suggestedEnd = date('H:i:s', $latestEndTs + $duration);
+                $suggested = [
+                    'start_time' => $suggestedStart,
+                    'end_time' => $suggestedEnd
+                ];
+            }
+
             if($determiner_type == 'false'){
                 echo json_encode([
                     'status' => 'error',
-                    'generalErr1' => $generalErr1
+                    'generalErr1' => $generalErr1,
+                    'conflicts' => $conflicts,
+                    'suggested' => $suggested
                 ]);
                 exit;
             }
@@ -524,7 +553,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
             $conflictingDay = [];
             $conflictingDay = array_intersect($day_id_1, $day_id_2);
             // Check for overlap with LEC time
-            if ($start_time_2 <= $end_time_1 && $end_time_2 >= $start_time_1 && $room_id_1 == $room_id_2 && !empty($conflictingDay)){
+            if ($start_time_2 < $end_time_1 && $end_time_2 > $start_time_1 && $room_id_1 == $room_id_2 && !empty($conflictingDay)){
                 $generalErr2 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule for LAB overlaps with the LEC schedule on the same room.';
                 $conflictingDayList = implode(', ', $conflictingDay);
                  
@@ -577,24 +606,54 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
         }else{
             if($checker2 > 0){
-                if($checker2 == 1){
-                    $generalErr2 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule overlaps with class ID '; 
-                }else{
-                    $generalErr2 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule overlaps with multiple classes: <br>'; 
+                    if($checker2 == 1){
+                        $generalErr2 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule overlaps with class ID '; 
+                    }else{
+                        $generalErr2 = '<strong>OVERLAPPING SCHEDULE!</strong><br>This schedule overlaps with multiple classes: <br>'; 
+                    }
+
+                    $conflicts = [];
+                    $latestEndTs = null;
+                    $index = 0;
+                    foreach($occupied_class_id as $class_id){
+                        $conflicts[] = [
+                            'class_id' => $class_id,
+                            'room' => $occupied_room[$index],
+                            'day' => $occupied_day_name[$index],
+                            'start_time' => $occupied_start_time[$index],
+                            'end_time' => $occupied_end_time[$index]
+                        ];
+
+                        $endTs = strtotime($occupied_end_time[$index]);
+                        if($latestEndTs === null || $endTs > $latestEndTs){
+                            $latestEndTs = $endTs;
+                        }
+
+                        $generalErr2 .= $class_id . ' on ' . $occupied_room[$index] . ' scheduled by ' . $occupied_day_name[$index] . ' from ' . $occupied_start_time[$index] . ' to ' . $occupied_end_time[$index] . '<br>';
+                        $index++;
+                    }
+
+                    $suggested = null;
+                    if($latestEndTs !== null){
+                        $requestedStartTs = strtotime($start_time_2);
+                        $requestedEndTs = strtotime($end_time_2);
+                        $duration = $requestedEndTs - $requestedStartTs;
+                        $suggestedStart = date('H:i:s', $latestEndTs);
+                        $suggestedEnd = date('H:i:s', $latestEndTs + $duration);
+                        $suggested = [
+                            'start_time' => $suggestedStart,
+                            'end_time' => $suggestedEnd
+                        ];
+                    }
+
+                    echo json_encode([
+                        'status' => 'error',
+                        'generalErr2' => $generalErr2,
+                        'conflicts' => $conflicts,
+                        'suggested' => $suggested
+                    ]);
+                    exit;
                 }
-                
-                $index = 0;      
-                foreach($occupied_class_id as $class_id){
-                    $generalErr2 .= $class_id . ' on ' . $occupied_room[$index] . ' scheduled by ' . $occupied_day_name[$index] . ' from ' . $occupied_start_time[$index] . ' to ' . $occupied_end_time[$index] . '<br>';
-                    $index++;
-                }
-        
-                echo json_encode([
-                    'status' => 'error',
-                    'generalErr2' => $generalErr2
-                ]);
-                exit;
-            }
         }
 
     }
@@ -640,6 +699,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Something went wrong when adding the new class status.']);
     }
+    exit;
+    }
+} catch (Exception $e) {
+    error_log("Error in save-room-status.php: " . $e->getMessage());
+    echo json_encode([
+        'status' => 'error', 
+        'message' => 'An error occurred while processing your request. Please try again.'
+    ]);
     exit;
 }
 

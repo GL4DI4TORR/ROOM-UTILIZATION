@@ -1,4 +1,9 @@
 <?php
+// Add these at the top of viewroomlist.php
+require_once '../tools/functions.php';  // Add this line
+  
+?>
+<?php
 session_start();
 
 // Add cache control headers to prevent caching
@@ -13,36 +18,20 @@ if (isset($_SESSION['account'])) {
 } else {
     header('location: ../account/loginwcss.php');
 }
-$page_title = "Room Utilization - Student View";
-require_once '../includes/_head.php';
 ?>
-<body id="dashboard">
-    <div class="wrapper">
-        <?php
-        require_once '../includes/_topnav.php';
-        require_once '../includes/_sidebar.php';
-        ?>
-        <div class="content-page px-3">
+
+<div class="container-fluid">
     <?php
         require_once '../classes/room-status.class.php';
         
         $roomObj = new RoomStatus();   
         
-        // Handle semester ID - set default if not exists
         $split_PK = $semester_PK = '';
-        if (isset($_SESSION['selected_semester_id']) && !empty($_SESSION['selected_semester_id'])) {
-            $semester_PK = $_SESSION['selected_semester_id'];
-            $split_PK = explode('|', $semester_PK);
-            $roomObj->semester = $split_PK[0];
-            $roomObj->school_year = $split_PK[1];
-            error_log("Viewclass-status.php - Using semester: " . $roomObj->semester . ", year: " . $roomObj->school_year);
-        } else {
-            // Set default semester if not exists
-            $roomObj->semester = '1';
-            $roomObj->school_year = '2024-2025';
-            $_SESSION['selected_semester_id'] = '1|2024-2025';
-            error_log("Viewclass-status.php - Using default semester: " . $roomObj->semester . ", year: " . $roomObj->school_year);
-        }
+        
+        $semester_PK = $_SESSION['selected_semester_id'];
+        $split_PK = explode('|', $semester_PK);
+        $roomObj->semester = $split_PK[0];
+        $roomObj->school_year = $split_PK[1];
     ?>
 
 <!-- Add this section BEFORE the "CLASS DETAILS LIST" section in viewclass-status.php -->
@@ -77,9 +66,7 @@ require_once '../includes/_head.php';
                     </div>
                 
                     <!-- Add Subject -->
-                    <?php if (hasPermission('admin') || hasPermission('staff')): ?>
                     <a id="add-subject-details" href="#" class="btn admin btn-primary">Add Subject</a>
-                    <?php endif; ?>
                 </div>
 
                 <div class="table-responsive">
@@ -112,17 +99,13 @@ require_once '../includes/_head.php';
                                     <td><?= $arr['lec_units'] ?></td>
                                     <td><?= $arr['lab_units'] ?></td>
                                     <td class="text-nowrap">
-                                        <?php if (hasPermission('admin') || hasPermission('staff')): ?>
-                                            <a href="#" class="btn admin edit-subject" data-subjectcode="<?= $arr['subject_code'] ?>">Edit</a>
-                                            <a href="#" class="btn admin delete delete-subject" data-subjectcode="<?= $arr['subject_code'] ?>">Delete</a>
-                                        <?php else: ?>
-                                            <span class="text-muted">View only</span>
-                                        <?php endif; ?>
+                                        <a href="#" class="btn admin edit-subject" data-subjectcode="<?= $arr['subject_code'] ?>">Edit</a>
+                                        <a href="#" class="btn admin delete delete-subject" data-subjectcode="<?= $arr['subject_code'] ?>">Delete</a>
                                     </td>
                                 </tr>
                             <?php
                                 $i++;
-                            }
+                                }
                             ?>
                         </tbody>
                     </table>
@@ -157,9 +140,7 @@ require_once '../includes/_head.php';
                         </div>
 
                         <!-- 1. Add Class Details   -->
-                        <?php if (hasPermission('admin') || hasPermission('staff')): ?>
                         <a id="add-class-details" href="#" class="btn admin btn-primary open-modal-button">Add Class Details</a>
-                        <?php endif; ?>
                     </div>
                     <div class="table-responsive">
                         <!-- 2. Table Class Details -->
@@ -188,19 +169,11 @@ require_once '../includes/_head.php';
                                         <td><?= $arr['section_'] ?></td>
                                         <td><?= $arr['teacher_'] ?></td>
                                         <td class="text-nowrap">
-                                            <?php if (hasPermission('admin') || hasPermission('staff')): ?>
-                                                <a href="#" class="btn admin w-50 edit-class-details" data-classid="<?= $arr['class_id']?>" data-subtype="<?= $arr['subject_type']?>">Edit</a>
-                                                <a href="#" class="btn admin w-50 delete delete-class-details" data-classid="<?= $arr['class_id']?>" data-subtype="<?= $arr['subject_type']?>">Delete</a>
-                                            <?php else: ?>
-                                                <span class="text-muted">View only</span>
-                                            <?php endif; ?>
+                                            <a href="" class="btn admin w-50 edit-class-details" data-classid="<?= $arr['class_id']?>" data-subtype="<?= $arr['subject_type']?>">Edit</a>
+                                            <a href="" class="btn admin w-50 delete delete-class-details" data-classid="<?= $arr['class_id']?>" data-subtype="<?= $arr['subject_type']?>">Delete</a>
                                         </td>
                                     </tr>
-                                <?php
-                                 
-                                    
-                                }
-                                ?>
+                                <?php } ?>
                             </tbody>
                         </table>
                     </div> <!-- end table-responsive-->
@@ -370,6 +343,7 @@ require_once '../includes/_head.php';
 
                             <tbody>
                                 <?php
+                                    $test ='Monday';
                                     $i = 1;
                                     $array = $roomObj->showAllStatus();
                                     
@@ -394,13 +368,14 @@ require_once '../includes/_head.php';
                                             <?php endif; ?>
                                             <?php if (hasPermission('admin')): ?>
                                                 <a href="" class="btn admin edit-room-status" data-classid="<?= $arr['class_id'] ?>" data-classday="<?= $arr['class_day'] ?>" data-subjecttype="<?= $arr['subject_type'] ?>">Edit</a>
-                                                <a href="" class="btn admin display-status">Display</a>
+                                                <a href="" class="btn admin display-status">Display</a> <!-- hidden or displayed  -->
                                                 <a href="" class="btn admin delete delete-room-status" data-classid="<?= $arr['class_id'] ?>" data-classday="<?= $arr['class_day'] ?>" data-subjecttype="<?= $arr['subject_type'] ?>">X</a>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php
                                     $i++;
+                                    
                                 }
                                 ?>
                             </tbody>
@@ -413,11 +388,5 @@ require_once '../includes/_head.php';
         </div>
     </div>
 
-        </div>
-    </div>
-    <?php
-    require_once '../includes/_footer.php';
-    ?>
-</body>
 
-</html>
+</div>

@@ -3,6 +3,11 @@ $_title_ = "";
 
 function clean_input($input)
 {
+    // Check if input is null or not a string
+    if ($input === null || !is_string($input)) {
+        return '';
+    }
+    
     // trim() removes any whitespace or predefined characters from both sides of a string.
     $input = trim($input);
 
@@ -40,11 +45,12 @@ function hasPermission($type = 'both') {
     
     switch($type) {
         case 'admin':
-            return $_SESSION['account']['is_admin'] == 1;
+            return isset($_SESSION['account']['is_admin']) && $_SESSION['account']['is_admin'] == 1;
         case 'staff':
-            return $_SESSION['account']['is_staff'] == 1;
+            return isset($_SESSION['account']['is_staff']) && $_SESSION['account']['is_staff'] == 1;
         case 'both':
-            return $_SESSION['account']['is_admin'] == 1 || $_SESSION['account']['is_staff'] == 1;
+            return (isset($_SESSION['account']['is_admin']) && $_SESSION['account']['is_admin'] == 1) || 
+                   (isset($_SESSION['account']['is_staff']) && $_SESSION['account']['is_staff'] == 1);
         default:
             return false;
     }

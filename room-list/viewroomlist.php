@@ -110,8 +110,10 @@ require_once '../tools/functions.php';  // Add this line
                                         <td><?= $arr['room_code'] . ' ' . $arr['room_no'] ?></td>
                                         <td><?= $arr['room_details'] ?></td>
                                         <td class="text-nowrap">
-                                            <a href="" class="btn room-schedule">Schedule</a>
-                                            <a href="" class="btn room-status">Status</a>
+                                            <?php if (hasPermission('admin') || hasPermission('staff')): ?>
+                                            <a href="#" class="btn room-schedule restricted" data-roomcode="<?= $arr['room_code'] ?>" data-roomno="<?= $arr['room_no'] ?>">Schedule</a>
+                                            <?php endif; ?>
+                                            <a href="javascript:void(0)" class="btn status-link" onclick="window.open('../class-room-status/viewclass-status.php', '_self')">Status</a>
                                             <?php if (hasPermission('admin')): ?>
                                             <a href="" class="btn admin edit-room" data-roomcode="<?= $arr['room_code'] ?>" data-roomno="<?= $arr['room_no'] ?>">Edit</a>
                                             <?php endif; ?>

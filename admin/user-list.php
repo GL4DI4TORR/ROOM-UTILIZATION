@@ -20,7 +20,9 @@ require_once '../includes/_head.php';
         require_once '../includes/_sidebar.php';
         ?>
         <div class="content-page px-3">
-            <!-- dynamic content here -->
+            <?php
+            require_once 'viewuser-list.php';
+            ?>
         </div>
     </div>
     <?php

@@ -98,7 +98,7 @@ INSERT INTO `class_details` (`class_id`, `subject_type`, `subject_id`, `course_a
 --
 
 CREATE TABLE `class_logs` (
-  `log_id` int(11) NOT NULL,
+  `log_id` int(11) NOT NULL AUTO_INCREMENT,
   `class_id` varchar(10) NOT NULL,
   `subject_type` varchar(10) NOT NULL,
   `day` enum('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday') NOT NULL,

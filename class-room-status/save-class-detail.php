@@ -1,4 +1,8 @@
 <?php
+// DEBUG: Show all PHP errors
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 session_start();
 
 require_once('../tools/functions.php');
@@ -27,7 +31,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     $selected_subject = clean_input($_POST['subject']);
     $selected_section = clean_input($_POST['section']);
-    $selected_teacher = clean_input($_POST['teacher']);
+    // Note: teacher field is now directly teacher-assigned from the select dropdown
+    $selected_teacher = ''; // Not used anymore with simple dropdown
 
     $selected_subject = explode(' ', $selected_subject)[0];
 
@@ -41,10 +46,53 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     if(empty($selected_section)){
         $section_idErr = 'Section is required.';
     }else{
-        $course_abbr = '';
-        $year_level = '';
-        $section = $selected_section;
+        // Extract course_abbr, year_level, and section from section-id if available
+        $section_id = clean_input($_POST['section-id']);
+        if (!empty($section_id) && strpos($section_id, '|') !== false) {
+            list($course_abbr, $year_level, $section) = explode('|', $section_id);
+        } else {
+            $course_abbr = '';
+            $year_level = '';
+            $section = $selected_section;
+        }
+
+        // --- SECTION EXISTENCE CHECK ---
+        $pdo = $roomObj->db->connect();
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM section_details WHERE course_abbr = ? AND year_level = ? AND section = ?");
+        $stmt->execute([$course_abbr, $year_level, $section]);
+        if ($stmt->fetchColumn() == 0) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => "Section does not exist in section_details. Please add the section first or select a valid section."
+            ]);
+            exit;
+        }
+
+    } // --- END: Section Validation ---
+
+    // --- BEGIN: Validation Error Block ---
+    if (
+        !empty($generalErr) ||
+        !empty($class_idErr) ||
+        !empty($section_idErr) ||
+        !empty($subject_idErr) ||
+        !empty($subject_typeErr) ||
+        !empty($teacher_assignedErr) ||
+        !empty($teacher_assigned_labErr)
+    ) {
+        echo json_encode([
+            'status' => 'error',
+            'generalErr' => $generalErr,
+            'class_idErr' => $class_idErr,
+            'section_idErr' => $section_idErr,
+            'subject_idErr' => $subject_idErr,
+            'subject_typeErr' => $subject_typeErr,
+            'teacher_assignedErr' => $teacher_assignedErr,
+            'teacher_assigned_labErr' => $teacher_assigned_labErr
+        ]);
+        exit;
     }
+    // --- END: Validation Error Block ---
 
 
     $subject_id = clean_input($_POST['subject-id']);
@@ -139,15 +187,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $determiner = '';
     $determiner = clean_input($_POST['determiner']);
 
-    if(empty($selected_teacher)){
-        if($determiner == 'true'){
-            $teacher_assignedErr = 'Teacher is required for subject type LEC.';
-        }else{
-            $teacher_assignedErr = 'Teacher is required.';
-        }
-    } else if(empty($teacher_assigned)){
-        // allow free text teacher
-        $teacher_assigned = $selected_teacher;
+    // Teacher validation - now using simple select dropdown
+    if(empty($teacher_assigned)){
+        $teacher_assignedErr = 'Teacher is required.';
     }
     
  
@@ -159,8 +201,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         if(empty($selected_teacher_lab)){
             $teacher_assigned_labErr = 'Teacher is required for subject type LAB.';
         } else if(empty($teacher_assigned_lab)){
-            // allow free text teacher lab
-            $teacher_assigned_lab = $selected_teacher_lab;
+            $teacher_assigned_labErr = 'Invalid teacher selection. Please select a teacher from the dropdown.';
         }
 
     }
@@ -206,7 +247,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         
         $noExclude = null;
    
-        $existing_details = $roomObj->checkExistingClassDetailsPK($class_id, $noExclude);
+        $existing_details = $roomObj->checkClassIDExisting($class_id);
         if($existing_details != null){
             $generalErr = '<strong>EXISTING CLASS ID!</strong> <br> A class with class ID ' . $existing_details['class_id'] . ' already exists for section ' . $existing_details['section_'] . ' with subject ' . $existing_details['subject_'];
             $class_idErr = 'Class ID should be unique for each section class.';
@@ -218,7 +259,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
             ]);
             exit;
         }
-
 
         $existing_class = $roomObj->checkSubjectSectionExisting($noExclude);
         if($existing_class != null){
@@ -292,10 +332,20 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         $roomObj->subject_type = $subject_type[$counter];
         if ($roomObj->insertClassDetails()) {
             $success++;
+            // Create default schedule entries for the new class
+            $roomObj->createDefaultScheduleEntries();
             // Collect the typeholder in an array
             $typeholders[] = $subject_type[$counter];
         } else {
             $error++;
+            // If there is a DB error, return it as JSON and exit
+            if (!empty($roomObj->last_error)) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Database error: ' . $roomObj->last_error
+                ]);
+                exit;
+            }
         }
         
         $counter++;
@@ -307,8 +357,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         echo json_encode(['status' => 'error', 'message' => 'Something went wrong when adding the new class status.']);
     }
 
-    exit;
-        
     }
 
+    exit;
 ?>

@@ -3,6 +3,8 @@
 require_once 'database.class.php';
 
 class RoomStatus{
+    public $last_error = '';
+
     public $semester = '';
     public $school_year = '';
 
@@ -130,26 +132,30 @@ class RoomStatus{
 
     //UPDATED 
     function insertClassDetails(){
-
-        $sql = "INSERT INTO class_details (class_id, subject_type, subject_id, course_abbr, year_level, section, teacher_assigned, semester, school_year) VALUES (:class_id, :subject_type, :subject_id, :course_abbr, :year_level, :section, :teacher_id, :semester, :school_year);";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':class_id', $this->class_id);
-        $query->bindParam(':subject_type', $this->subject_type);
-        $query->bindParam(':subject_id', $this->subject_id);
-        $query->bindParam(':course_abbr', $this->course_abbr);
-        $query->bindParam(':year_level', $this->year_level);
-        $query->bindParam(':section', $this->section);
-        $query->bindParam(':teacher_id', $this->teacher_assigned);
-        $query->bindParam(':semester', $this->semester);
-        $query->bindParam(':school_year', $this->school_year);
-        $query->execute();
-        return true;
+        try {
+            $sql = "INSERT INTO class_details (class_id, subject_type, subject_id, course_abbr, year_level, section, teacher_assigned, semester, school_year) VALUES (:class_id, :subject_type, :subject_id, :course_abbr, :year_level, :section, :teacher_id, :semester, :school_year);";
+            $query = $this->db->connect()->prepare($sql);
+            $query->bindParam(':class_id', $this->class_id);
+            $query->bindParam(':subject_type', $this->subject_type);
+            $query->bindParam(':subject_id', $this->subject_id);
+            $query->bindParam(':course_abbr', $this->course_abbr);
+            $query->bindParam(':year_level', $this->year_level);
+            $query->bindParam(':section', $this->section);
+            $query->bindParam(':teacher_id', $this->teacher_assigned);
+            $query->bindParam(':semester', $this->semester);
+            $query->bindParam(':school_year', $this->school_year);
+            $query->execute();
+            return true;
+        } catch (PDOException $e) {
+            $this->last_error = $e->getMessage();
+            return false;
+        }
     }
 
     function insertScheduleDay(){
         $sql = "INSERT INTO class_schedule 
-        (class_id, subject_type, `day`, start_time, end_time, room_code, room_no, semester, school_year) 
-        VALUES (:class_id, :subject_type, :day_id, :start_time, :end_time, :room_code, :room_no, :semester, :school_year);";
+        (class_id, subject_type, `day`, start_time, end_time, room_code, room_no, status, remarks, semester, school_year) 
+        VALUES (:class_id, :subject_type, :day_id, :start_time, :end_time, :room_code, :room_no, 'OCCUPIED', '', :semester, :school_year);";
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':class_id', $this->class_id);
         $query->bindParam(':subject_type', $this->subject_type);
@@ -164,18 +170,38 @@ class RoomStatus{
         return true;
     }
 
-function checkSubjectExists($subject_code){
-    $sql = "SELECT COUNT(*) as count FROM subject_details WHERE subject_code = :subject_code";
-    $query = $this->db->connect()->prepare($sql);
-    $query->bindParam(':subject_code', $subject_code);
-    $query->execute();
-    $result = $query->fetch();
-    return $result['count'] > 0;
-}
-
-function showAllSubjects($prospectus_id = null){
-    // If a prospectus id is provided, filter; otherwise, return all subjects
-    if ($prospectus_id !== null) {
+    function checkExistingClassDetailsPK($class_id, $excludeClassID = null){
+        $sql = "SELECT 
+            class.class_id AS class_id,
+            class.subject_id AS subject_,
+            CONCAT(class.course_abbr, class.year_level, class.section) AS section_
+        FROM class_details class
+        WHERE class.class_id = :class_id";
+        
+        if($excludeClassID != null){
+            $sql .= " AND class.class_id != :excludeClassID";
+        }
+        
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':class_id', $class_id);
+        
+        if($excludeClassID != null){
+            $query->bindParam(':excludeClassID', $excludeClassID);
+        }
+        
+        if($query->execute()){
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+            return $data ? [
+                'class_id' => $data['class_id'], 
+                'subject_' => $data['subject_'],
+                'section_' => $data['section_']
+            ] : null;
+        }
+        return null;
+    }
+    
+    // Make sure showAllSubjects method exists and is correct
+    function showAllSubjects($prospectus_id = '2023-2024'){
         $sql = "SELECT 
                     subject_code,
                     description,
@@ -184,33 +210,27 @@ function showAllSubjects($prospectus_id = null){
                     lab_units,
                     subject_prospectus_id
                 FROM subject_details
-                WHERE subject_prospectus_id = :prospectus_id
                 ORDER BY subject_code ASC";
-    } else {
-        $sql = "SELECT 
-                    subject_code,
-                    description,
-                    total_units,
-                    lec_units,
-                    lab_units,
-                    subject_prospectus_id
-                FROM subject_details
-                ORDER BY subject_code ASC";
+        
+        $query = $this->db->connect()->prepare($sql);
+        
+        $data = null;
+        if ($query->execute()) {
+            $data = $query->fetchAll();
+        }
+        return $data;
     }
     
-    $query = $this->db->connect()->prepare($sql);
-    if ($prospectus_id !== null) {
-        $query->bindParam(':prospectus_id', $prospectus_id);
+    function checkSubjectExists($subject_code){
+        $sql = "SELECT COUNT(*) as count FROM subject_details WHERE subject_code = :subject_code";
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':subject_code', $subject_code);
+        $query->execute();
+        $result = $query->fetch();
+        return $result['count'] > 0;
     }
-    
-    $data = null;
-    if ($query->execute()) {
-        $data = $query->fetchAll();
-    }
-    return $data;
-}
-    
 
+    
     function insertClassTime(){
         $sql = "INSERT INTO class_time (class_id, subject_id, start_time, end_time) VALUES (:class_id, :subject_id, :start_time, :end_time);";
         $query = $this->db->connect()->prepare($sql);
@@ -225,16 +245,9 @@ function showAllSubjects($prospectus_id = null){
     }
 
     function insertClassDay(){
-        $sql = "INSERT INTO class_day (class_time_id, day_id) VALUES (:class_time_id, :day_id);";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':class_time_id', $this->class_time_id);
-        $query->bindParam(':day_id', $this->day_id);
-        $query->execute();
-        $this->class_day_id = $this->db->connect()->lastInsertId();
-
-        $this->insertStatus();
-
-        return true;
+        // This method is deprecated - use insertScheduleDay instead
+        // Keeping for backward compatibility but redirecting to insertScheduleDay
+        return $this->insertScheduleDay();
     }
 
     /**
@@ -256,7 +269,8 @@ function showAllSubjects($prospectus_id = null){
                 LEFT JOIN faculty_list fac ON class.teacher_assigned = fac.faculty_id
                 LEFT JOIN user_list usr ON fac.user_id = usr.user_id
                 LEFT JOIN account acc ON usr.user_id = acc.account_id
-                WHERE sched.semester = :semester AND sched.school_year = :school_year";
+                WHERE sched.semester = :semester AND sched.school_year = :school_year
+                AND sched.status = 'OCCUPIED'"; // Only show occupied classes in schedule
 
         if ($room_code !== null && $room_no !== null) {
             $sql .= " AND sched.room_code = :room_code AND sched.room_no = :room_no";
@@ -286,14 +300,40 @@ function showAllSubjects($prospectus_id = null){
         return $data;
     }
 
-    function insertStatus(){
-        $sql = "INSERT INTO scheduled_statuses (class_day_id, semester, school_year) VALUES (:class_day_id, :semester, :school_year);";
+    function getClassScheduleDetail(){
+        $sql = "SELECT
+                    sched.class_id,
+                    sched.subject_type,
+                    sched.day AS class_day,
+                    sched.start_time,
+                    sched.end_time,
+                    sched.room_code,
+                    sched.room_no,
+                    sched.status,
+                    sched.remarks
+                FROM class_schedule sched
+                WHERE sched.class_id = :class_id 
+                AND sched.subject_type = :subject_type
+                AND sched.day = :day_id
+                AND sched.semester = :semester
+                AND sched.school_year = :school_year";
+        
         $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':class_day_id', $this->class_day_id);
+        $query->bindParam(':class_id', $this->class_id);
+        $query->bindParam(':subject_type', $this->subject_type);
+        $query->bindParam(':day_id', $this->day_id);
         $query->bindParam(':semester', $this->semester);
         $query->bindParam(':school_year', $this->school_year);
-        $query->execute();
+        
+        $data = null;
+        if ($query->execute()) {
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return $data;
+    }
 
+    function insertStatus(){
+        // This method is deprecated - status is now handled directly in insertScheduleDay
         return true;
     }
 
@@ -356,7 +396,7 @@ function showAllSubjects($prospectus_id = null){
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':semester', $this->semester);
         $query->bindParam(':school_year', $this->school_year);
-        $query->bindParam(':teacher_id', $this->teacher_id);
+        $query->bindParam(':teacher_id', $this->teacher_assigned);
 
         $data = null;
         if ($query->execute()) {
@@ -374,6 +414,9 @@ function showAllSubjects($prospectus_id = null){
                 sched.class_id AS class_id,
                 sched.subject_type AS subject_type,
                 sched.day AS class_day,
+
+                sched.room_code AS room_code,
+                sched.room_no AS room_no,
 
                 CONCAT(sched.room_code, ' ', sched.room_no) AS room_name,
                 rtype.room_description AS room_type,
@@ -418,6 +461,11 @@ function showAllSubjects($prospectus_id = null){
             $sql .= " ORDER BY room_name, start_time;";
         }
         
+        // Debug: Log the SQL query and parameters
+        error_log("showAllStatus - SQL: " . $sql);
+        error_log("showAllStatus - Semester: " . $this->semester . ", Year: " . $this->school_year);
+        error_log("showAllStatus - Selected Day: " . ($selectedDay ?? 'null'));
+        
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':semester', $this->semester);
         $query->bindParam(':school_year', $this->school_year);
@@ -429,6 +477,9 @@ function showAllSubjects($prospectus_id = null){
         $data = null;
         if ($query->execute()){
             $data = $query->fetchAll();
+            error_log("showAllStatus - Query executed successfully, results: " . count($data));
+        } else {
+            error_log("showAllStatus - Query execution failed: " . implode(", ", $query->errorInfo()));
         }
         return $data;
     }
@@ -446,18 +497,12 @@ function showAllSubjects($prospectus_id = null){
 
             FROM class_details class 
             LEFT JOIN section_details sec ON class.course_abbr = sec.course_abbr AND class.year_level = sec.year_level AND class.section = sec.section
-            LEFT JOIN subject_details sub ON class.subject_id = sub.subject_code
             LEFT JOIN faculty_list fac ON class.teacher_assigned = fac.faculty_id
             LEFT JOIN user_list user ON fac.user_id = user.user_id
             LEFT JOIN account acc ON user.user_id = acc.account_id
-            LEFT JOIN semester sem ON class.semester = sem.semester
-
-            WHERE sem.semester = :semester AND sem.school_year = :school_year ORDER BY section_
-        ;";
+            ORDER BY section_";
 
         $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':semester', $this->semester);
-        $query->bindParam(':school_year', $this->school_year);
 
         $data = null;
         if ($query->execute()){
@@ -482,17 +527,13 @@ function showAllSubjects($prospectus_id = null){
         $query->bindParam(':subject_code', $subject_id);
 
         if ($query->execute()) {
-            $data = $query->fetch();
-
-            if ($type == "LEC") {
-                return $data ? $data['lab_units'] : null; // Return lab_units if type is LEC
-            } else if ($type == "LAB") {
-                return $data ? $data['lec_units'] : null; // Return lec_units if type is LAB
-            }
+            $data = $query->fetch(PDO::FETCH_ASSOC);
+            return $data; // Return the full array with both lec_units and lab_units
         }
         return null;
     }
 
+    
     function checkClassSubtypeExisting($classID, $subType, $excludeClassID = null, $excludeSubType = null){
         $sql = "SELECT c.subject_type AS stype, s.lec_units AS lec_units, s.lab_units AS lab_units
             FROM class_details c LEFT JOIN subject_details s ON c.subject_id = s.subject_code
@@ -513,7 +554,7 @@ function showAllSubjects($prospectus_id = null){
         }
 
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
 
             if(!empty($data) && $data['stype'] == 'LEC'){
                 return $data ? ['lec_units' => $data['lec_units'], 'lab_units' => $data['lab_units']] : null;
@@ -533,7 +574,7 @@ function showAllSubjects($prospectus_id = null){
         $query = $this->db->connect()->prepare($sql);
         $query->bindParam(':class_id', $classID);
         $query->execute();
-        $data = $query->fetch();
+        $data = $query->fetch(PDO::FETCH_ASSOC);
         return $data? $data['subject_type'] : null;
     }
     
@@ -561,7 +602,7 @@ function showAllSubjects($prospectus_id = null){
         }
 
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
             return $data ? $data['class_id'] : null;
         }
         return null;
@@ -581,7 +622,7 @@ function showAllSubjects($prospectus_id = null){
         $query->bindParam(':class_id', $recordID);
 
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
             return $data ? $data['section_'] : null; 
         }
         return null;
@@ -607,7 +648,7 @@ function showAllSubjects($prospectus_id = null){
         $query->bindParam(':year_level', $this->year_level);
         $query->bindParam(':section', $this->section);
         $query->execute();
-        $data = $query->fetch();
+        $data = $query->fetch(PDO::FETCH_ASSOC);
         return $data ? ['class_id' => $data['class_id'], 'subject_id' => $data['subject_id'], 'section_name' => $data['section_name']] : null;
     }
 
@@ -627,9 +668,8 @@ function showAllSubjects($prospectus_id = null){
         WHERE s.day = :day_id AND (
         s.room_code = :room_code AND s.room_no = :room_no
         ) AND (
-        (s.start_time <= :end_time AND s.end_time >= :start_time)
-        OR (s.start_time >= :start_time AND s.start_time < :end_time)
-        OR (s.end_time > :start_time AND s.end_time <= :end_time)
+        -- Overlap only when intervals strictly intersect: start < new_end AND end > new_start
+        (s.start_time < :end_time AND s.end_time > :start_time)
         )";
 
         if ($excludeClassID != null && $excludeSubtype != null && $excludeDay != null){
@@ -650,7 +690,7 @@ function showAllSubjects($prospectus_id = null){
         }
         
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
             return $data ? [$data['class_id'], $data['day_name'], $data['start_time'], $data['end_time'], $data['room']] : null;
         } 
         return null;
@@ -686,7 +726,7 @@ function showAllSubjects($prospectus_id = null){
         }
 
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
             return $data ? [$data['class_id'], $data['day_name'], $data['start_time'], $data['end_time'], $data['room']] : null;
         } 
         return null;
@@ -725,7 +765,7 @@ function showAllSubjects($prospectus_id = null){
 
         $data = null;
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
         }
         return $data;
     }
@@ -760,7 +800,7 @@ function showAllSubjects($prospectus_id = null){
         $query->bindParam(':recordClassDay', $recordClassDay);
         $data = null;
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
         }
         return $data;
     }
@@ -796,15 +836,48 @@ function showAllSubjects($prospectus_id = null){
     }
 
     function deleteClassSchedule(){
-        $sql = "DELETE FROM class_schedule WHERE class_id = :class_id AND subject_type = :subject_type AND `day` = :class_day
-        ;";
-        $query = $this->db->connect()->prepare($sql);
-        $query->bindParam(':class_id', $this->class_id);
-        $query->bindParam(':subject_type', $this->subject_type);
-        $query->bindParam(':class_day', $this->day_id);
-        $query->execute();
-
-        return true;
+        // Start transaction
+        $conn = $this->db->connect();
+        $conn->beginTransaction();
+        
+        try {
+            // Debug logging
+            error_log("Attempting to delete: class_id={$this->class_id}, subject_type={$this->subject_type}, day_id={$this->day_id}");
+            
+            // Delete from class_schedule table
+            $sql = "DELETE FROM class_schedule WHERE class_id = :class_id AND subject_type = :subject_type AND `day` = :class_day";
+            $query = $conn->prepare($sql);
+            $query->bindParam(':class_id', $this->class_id);
+            $query->bindParam(':subject_type', $this->subject_type);
+            $query->bindParam(':class_day', $this->day_id);
+            $result1 = $query->execute();
+            
+            error_log("Class schedule deletion result: " . ($result1 ? 'success' : 'failed'));
+            
+            // Delete from class_details table
+            $sql = "DELETE FROM class_details WHERE class_id = :class_id AND subject_type = :subject_type";
+            $query = $conn->prepare($sql);
+            $query->bindParam(':class_id', $this->class_id);
+            $query->bindParam(':subject_type', $this->subject_type);
+            $result2 = $query->execute();
+            
+            error_log("Class details deletion result: " . ($result2 ? 'success' : 'failed'));
+            
+            if ($result1 && $result2) {
+                // Commit transaction
+                $conn->commit();
+                error_log("Transaction committed successfully");
+                return true;
+            } else {
+                throw new Exception("One or more deletions failed");
+            }
+            
+        } catch (PDOException $e) {
+            // Rollback transaction on error
+            $conn->rollback();
+            error_log("Delete transaction failed: " . $e->getMessage());
+            return false;
+        }
     }
 
     function fetchRoomName($recordID){
@@ -813,12 +886,62 @@ function showAllSubjects($prospectus_id = null){
         $query->bindParam(':recordID', $recordID);
         $data = null;
         if ($query->execute()) {
-            $data = $query->fetch();
+            $data = $query->fetch(PDO::FETCH_ASSOC);
         }
         return $data;
     }
 
     
+    function getCurrentStatus(){
+        $sql = "SELECT status FROM class_schedule 
+                WHERE class_id = :class_id 
+                AND subject_type = :subject_type 
+                AND day = :class_day
+                AND semester = :semester
+                AND school_year = :school_year";
+        
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':class_id', $this->class_id);
+        $query->bindParam(':subject_type', $this->subject_type);
+        $query->bindParam(':class_day', $this->day_id);
+        $query->bindParam(':semester', $this->semester);
+        $query->bindParam(':school_year', $this->school_year);
+        
+        if ($query->execute()) {
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            return $result ? $result['status'] : null;
+        }
+        return null;
+    }
+
+    function toggleClassStatus(){
+        $sql = "UPDATE class_schedule 
+                SET status = CASE 
+                    WHEN status = 'OCCUPIED' THEN 'AVAILABLE'
+                    WHEN status = 'AVAILABLE' THEN 'OCCUPIED'
+                    ELSE 'OCCUPIED'
+                END
+                WHERE class_id = :class_id 
+                AND subject_type = :subject_type 
+                AND day = :class_day
+                AND semester = :semester
+                AND school_year = :school_year";
+        
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':class_id', $this->class_id);
+        $query->bindParam(':subject_type', $this->subject_type);
+        $query->bindParam(':class_day', $this->day_id);
+        $query->bindParam(':semester', $this->semester);
+        $query->bindParam(':school_year', $this->school_year);
+        
+        if ($query->execute()) {
+            return true;
+        } else {
+            error_log("Toggle status failed: " . implode(", ", $query->errorInfo()));
+            return false;
+        }
+    }
+
     function roomnameExists($room_name, $excludeID = null){
         $sql = "SELECT COUNT(*) FROM room_list WHERE room_name = :room_name";
         if ($excludeID) {
@@ -853,6 +976,16 @@ function showAllSubjects($prospectus_id = null){
     //for filter dropdown, room_name in room list
     public function fetchroomList(){
         $sql = " SELECT *, CONCAT(room_code, ' ', room_no) AS room_name FROM room_list;";
+        $query = $this->db->connect()->prepare($sql);
+        $data = null;
+        if ($query->execute()) {
+            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return $data;
+    }
+
+    public function fetchRoomOption(){
+        $sql = "SELECT room_code, room_no, CONCAT(room_code, ' ', room_no) AS room_name FROM room_list ORDER BY room_code, room_no";
         $query = $this->db->connect()->prepare($sql);
         $data = null;
         if ($query->execute()) {
@@ -912,34 +1045,64 @@ function showAllSubjects($prospectus_id = null){
 
     //for semester dropdown
     public function fetchclassesOption(){
-        $sql = "SELECT 
-                CONCAT(class.class_id,' ', class.subject_id) AS class_sub,
-                CONCAT(sub.lec_units,'|', sub.lab_units) AS subject_units,
-                CONCAT(class.class_id,' ', class.subject_id, ' ',class.subject_type) AS class_display,
-                class.class_id AS class_id,
-                class.subject_type AS subject_type
-
-            FROM class_details class LEFT JOIN subject_details sub ON class.subject_id = sub.subject_code
-            GROUP BY class.class_id
-            ORDER BY class_id ASC;";
-        $query = $this->db->connect()->prepare($sql);
-        $data = null;
-        if ($query->execute()) {
-            $data = $query->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $sql = "SELECT 
+                    class.class_id,
+                    class.subject_id,
+                    CONCAT(class.class_id, ' - ', class.subject_id) AS subject_name,
+                    class.subject_type,
+                    CONCAT(class.course_abbr, class.year_level, class.section) AS section_name
+                FROM class_details class
+                ORDER BY class.class_id ASC";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $data = null;
+            if ($query->execute()) {
+                $data = $query->fetchAll(PDO::FETCH_ASSOC);
+                error_log("fetchclassesOption: Successfully fetched " . count($data) . " classes");
+            } else {
+                error_log("fetchclassesOption: Query execution failed - " . implode(", ", $query->errorInfo()));
+            }
+            return $data;
+        } catch (PDOException $e) {
+            error_log("fetchclassesOption: Database error - " . $e->getMessage());
+            return [];
         }
-        return $data;
     }
 
-     //for filter dropdown search Teacher
+     public function createDefaultScheduleEntries() {
+        // DISABLED: Auto-creation of schedule entries for all weekdays
+        // This was causing schedules to be created for all days (Monday-Friday) 
+        // regardless of user selection. Users should manually add schedules.
+        /*
+        // Create default schedule entries for Monday-Friday with AVAILABLE status
+        // Use existing room from room_list table
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        
+        foreach ($days as $day) {
+            $sql = "INSERT INTO class_schedule 
+                    (class_id, subject_type, day, start_time, end_time, status, remarks, room_code, room_no, semester, school_year) 
+                    VALUES (?, ?, ?, '08:00:00', '09:00:00', 'AVAILABLE', 'No schedule yet', 'LR', 1, ?, ?)";
+            
+            $query = $this->db->connect()->prepare($sql);
+            $query->execute([$this->class_id, $this->subject_type, $day, $this->semester, $this->school_year]);
+        }
+        */
+    }
+
+    //for filter dropdown search Teacher
     public function fetchteacherOption(){
-        $sql = "SELECT fac.faculty_id AS faculty_id, CONCAT(acc.last_name,', ',acc.first_name) AS teacher_name 
-        FROM faculty_list fac 
-        LEFT JOIN user_list user ON fac.user_id = user.user_id
-        LEFT JOIN account acc ON user.user_id = acc.account_id;";
+        // Simplified query - just get faculty_id and create a simple teacher name
+        $sql = "SELECT fac.faculty_id AS faculty_id, CONCAT('Teacher ', fac.faculty_id) AS teacher_name 
+        FROM faculty_list fac";
+        
         $query = $this->db->connect()->prepare($sql);
         $data = null;
         if ($query->execute()) {
             $data = $query->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Teacher query result: " . print_r($data, true));
+        } else {
+            error_log("Teacher query failed: " . print_r($query->errorInfo(), true));
         }
         return $data;
     }
@@ -1283,7 +1446,7 @@ function showAllSubjects($prospectus_id = null){
     //     $query->bindParam(':teacher_id', $this->teacher_assigned);
         
     //     if ($query->execute()) {
-    //         $data = $query->fetch();
+    //         $data = $query->fetch(PDO::FETCH_ASSOC);
     //         return $data ? $data['class_id'] : null;  // Return just the ID if found
     //     }
     //     return null;

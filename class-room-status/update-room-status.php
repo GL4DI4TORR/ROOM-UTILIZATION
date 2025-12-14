@@ -1,5 +1,14 @@
 <?php
+// Enable error reporting for debugging but disable display
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Set JSON header at the very beginning
+header('Content-Type: application/json');
+
 session_start();
+
 require_once('../tools/functions.php');
 require_once('../classes/room-status.class.php');
 
@@ -26,7 +35,8 @@ $splitroom_PK_1 = $room_code = $room_no = $room_code_lec = $room_no_lec = $room_
 
 $roomObj = new RoomStatus();
 
-if($_SERVER['REQUEST_METHOD'] == 'POST'){
+try {
+    if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $semester_PK = clean_input($_SESSION['selected_semester_id']);
     $splitsemester_PK = explode('|', $semester_PK);
     $semester = $splitsemester_PK[0];
@@ -299,8 +309,16 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     if($roomObj->updateScheduleDay()){   
         echo json_encode(['status' => 'success']);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Something went wrong when adding the new class status.']);
+        echo json_encode(['status' => 'error', 'message' => 'Something went wrong when updating the class status.']);
     }
+    exit;
+    }
+} catch (Exception $e) {
+    error_log("Error in update-room-status.php: " . $e->getMessage());
+    echo json_encode([
+        'status' => 'error', 
+        'message' => 'An error occurred while processing your request. Please try again.'
+    ]);
     exit;
 }
 

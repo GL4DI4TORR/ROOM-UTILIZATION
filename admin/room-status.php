@@ -8,7 +8,7 @@ if (isset($_SESSION['account'])) {
 } else {
     header('location: ../account/loginwcss.php');
 }
-$page_title = "roomstatus";
+$page_title = "Room Utilization - Dashboard";
 require_once '../includes/_head.php';
 ?>
 

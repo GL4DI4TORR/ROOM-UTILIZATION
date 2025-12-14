@@ -11,8 +11,8 @@ $accountObj = new Account();
 $generalErr = '';
 $generalErrDisplay = FALSE;
 
-$user_id = $first_name = $last_name = $username = $password = '';
-$user_idErr = $first_nameErr = $last_nameErr = $usernameErr = $passwordErr = '';
+$user_id = $first_name = $last_name = $username = $password = $confirm_password = '';
+$user_idErr = $first_nameErr = $last_nameErr = $usernameErr = $passwordErr = $confirm_passwordErr = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $user_id = clean_input($_POST['user-id']);
@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $last_name = clean_input($_POST['lastname']);
     $username = clean_input($_POST['username']);
     $password = clean_input($_POST['password']);
+    $confirm_password = clean_input($_POST['confirm_password']);
 
     
     if (empty($user_id)) {
@@ -44,6 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     if(empty($password)) {
         $passwordErr = "password is Required!";
     }
+    
+    if(empty($confirm_password)) {
+        $confirm_passwordErr = "Please confirm your password!";
+    } elseif($password !== $confirm_password) {
+        $confirm_passwordErr = "Passwords do not match!";
+    }
 
     if($accountObj->useridExist($user_id)) {
         $generalErrDisplay = TRUE;
@@ -58,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         $usernameErr = "Invalid";
     }
 
-    if (empty($generalErr) && empty($user_idErr) && empty($first_nameErr) && empty($last_nameErr) && empty($usernameErr) && empty($passwordErr)) {
+    if (empty($generalErr) && empty($user_idErr) && empty($first_nameErr) && empty($last_nameErr) && empty($usernameErr) && empty($passwordErr) && empty($confirm_passwordErr)) {
         $accountObj->account_id = $user_id;
         $accountObj->first_name = $first_name;
         $accountObj->last_name = $last_name;
@@ -221,6 +228,67 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         border-top-left-radius: 0;
         border-top-right-radius: 0;
     }
+    
+    .form-floating .input-group {
+        margin-bottom: 1rem;
+        position: relative;
+        height: 3.6rem;
+    }
+
+    .form-floating .input-group > .form-control {
+        padding-right: 2.5rem;
+        height: 100%;
+    }
+
+    .form-floating .input-group > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        height: 100%;
+        padding: 1rem 0.75rem;
+        padding-right: 2.5rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity .1s ease-in-out,transform .1s ease-in-out;
+        display: flex;
+        align-items: center;
+        line-height: 1.5;
+    }
+    
+    .form-floating .input-group > .form-control:not(:placeholder-shown) ~ label,
+    .form-floating .input-group:focus-within > label {
+        opacity: 0;
+        transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+        pointer-events: none;
+    }
+
+    .input-group-text {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        z-index: 5;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-left: none;
+        width: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        background-color: transparent;
+        border: none;
+    }
+
+    .input-group-text i {
+        font-size: 0.875rem;
+        vertical-align: middle;
+        line-height: 1;
+        margin: 0;
+        color: #6c757d;
+    }
 </style>
 
 <body class="d-flex align-items-center py-4 bg-body-tertiary">
@@ -260,9 +328,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             </div>
 
             <div class="form-floating">
-                <input type="password" class="form-control <?= $passwordErr == '' ? '' : 'borderErr'; ?>" id="password" name="password" placeholder="Password">
+                <div class="input-group">
+                    <input type="password" class="form-control <?= $passwordErr == '' ? '' : 'borderErr'; ?>" id="password" name="password">
+                    <div class="input-group-text" style="cursor: pointer;" id="toggle-password">
+                        <i class="bi bi-eye" id="password-eye"></i>
+                    </div>
+                </div>
                 <label for="password">Password</label>
                 <p class="text-danger"><?= $passwordErr ?></p>
+            </div>
+
+            <div class="form-floating">
+                <div class="input-group">
+                    <input type="password" class="form-control <?= $confirm_passwordErr == '' ? '' : 'borderErr'; ?>" id="confirm_password" name="confirm_password">
+                    <div class="input-group-text" style="cursor: pointer;" id="toggle-confirm-password">
+                        <i class="bi bi-eye" id="confirm-password-eye"></i>
+                    </div>
+                </div>
+                <label for="confirm_password">Confirm Password</label>
+                <p class="text-danger"><?= $confirm_passwordErr ?></p>
             </div>
 
             <button class="btn btn-primary w-100 py-2" type="submit">Sign Up</button>
@@ -270,6 +354,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             <p class="mt-5 mb-3 text-body-secondary">&copy; 2025–2026</p>
         </form>
     </main>
+    
+    <script>
+        // Password visibility toggle functionality
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const passwordEye = document.getElementById('password-eye');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordEye.classList.remove('bi-eye');
+                passwordEye.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                passwordEye.classList.remove('bi-eye-slash');
+                passwordEye.classList.add('bi-eye');
+            }
+        });
+        
+        document.getElementById('toggle-confirm-password').addEventListener('click', function() {
+            const confirmPasswordInput = document.getElementById('confirm_password');
+            const confirmPasswordEye = document.getElementById('confirm-password-eye');
+            
+            if (confirmPasswordInput.type === 'password') {
+                confirmPasswordInput.type = 'text';
+                confirmPasswordEye.classList.remove('bi-eye');
+                confirmPasswordEye.classList.add('bi-eye-slash');
+            } else {
+                confirmPasswordInput.type = 'password';
+                confirmPasswordEye.classList.remove('bi-eye-slash');
+                confirmPasswordEye.classList.add('bi-eye');
+            }
+        });
+        
+        // Handle label transformation for password fields
+        function handleLabelTransform(inputId) {
+            const input = document.getElementById(inputId);
+            const label = input.parentElement.nextElementSibling;
+            
+            function updateLabel() {
+                if (input.value.length > 0) {
+                    label.style.opacity = '0';
+                    label.style.transform = 'scale(.85) translateY(-0.5rem) translateX(0.15rem)';
+                    label.style.pointerEvents = 'none';
+                } else {
+                    label.style.opacity = '';
+                    label.style.transform = '';
+                    label.style.pointerEvents = '';
+                }
+            }
+            
+            input.addEventListener('input', updateLabel);
+            input.addEventListener('focus', updateLabel);
+            input.addEventListener('blur', updateLabel);
+        }
+        
+        // Initialize label handling for both password fields
+        handleLabelTransform('password');
+        handleLabelTransform('confirm_password');
+    </script>
+    
     <?php
     require_once '../includes/_footer.php';
     ?>

@@ -383,6 +383,43 @@ a.nav-link{
   padding: 0;
 }
 
+/* Sidebar-specific spacing overrides to ensure readable menu items */
+.sidebar > ul {
+  padding-left: 0;
+  margin: 0;
+}
+.sidebar > ul > li {
+  list-style: none;
+  margin-bottom: 6px;
+}
+.sidebar > ul > li > a.nav-link {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--sidebar-menu-item-color);
+}
+
+.sidebar > ul > li > a.nav-link .bi {
+  margin-left: 8px; /* tighten icon offset inside link */
+}
+
+/* Active / seen state: change text color to white (no background) */
+.sidebar > ul > li > a.nav-link.link-active,
+.sidebar > ul > li > a.nav-link.active,
+.sidebar > ul > li > a.nav-link:focus,
+.sidebar > ul > li > a.nav-link[aria-current="true"] {
+  color: var(--sidebar-menu-active-color) !important;
+}
+
+/* Ensure icons inside active links also use white color */
+.sidebar > ul > li > a.nav-link.link-active .bi,
+.sidebar > ul > li > a.nav-link.active .bi,
+.sidebar > ul > li > a.nav-link:focus .bi,
+.sidebar > ul > li > a.nav-link[aria-current="true"] .bi {
+  color: var(--sidebar-menu-active-color) !important;
+}
+
 .sidebar i.bi {
   /* width: 40px; */
   margin-left: 21.5px;
@@ -398,6 +435,22 @@ a.nav-link{
 
 .bi.status-icon{
   display: flex;
+}
+
+/* Ensure select dropdown text is visible inside modals */
+.modal .form-select,
+#schedule-class-id,
+#schedule-class-id option {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+/* also ensure schedule-room text visible */
+#schedule-room,
+#schedule-room option {
+  color: #000 !important;
+  background-color: #fff !important;
+}
   height: 47px;
   align-items: center;
   /* margin-left: 21.5px; */
@@ -763,6 +816,14 @@ div.dt-container div.dt-paging ul.pagination {
 
 .table > :not(caption) > * > * {
   background-color: var(--ct-table-bg) !important;
+}
+
+/* Make sure the Remarks column in the Class Status table is readable */
+#table-room-status td:nth-child(11),
+#table-room-status td:nth-child(11) * {
+  color: #222 !important;
+  opacity: 1 !important;
+  background-color: transparent !important;
 }
 
 .page-item:not(.active) .page-link {
