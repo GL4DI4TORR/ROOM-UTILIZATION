@@ -1,0 +1,43 @@
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Add Room</h5>
+          <button type="button" class="btn-close modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div> 
+        <form action="" method="post" id="form-add-room">
+          <div class="modal-body">
+            <div class="mb-2">
+              <div class="alert alert-danger d-none" id="general-error"></div>
+            </div>
+            
+            <div class="mb-2">
+              <label for="room-name" class="form-label">Room Name</label>
+              <input type="text" class="form-control" id="room-name" name="room-name">
+              <div class="invalid-feedback"></div>
+            </div>
+            
+            <br>
+
+            <div class="mb-2">
+              <P class="form-label">Room Type</P>
+              <div class="dropdown">
+                  <input type="text" class="form-control dropdown-input" placeholder="Search and Select..." id="dropdown-room-type" name="room-type" >
+                  <input type="hidden" id="hidden-room-type-id" name="room-type-id"/>
+                  <div class="dropdown-list" id="dropdown-list-room-type">
+                      <!-- Options will be populated here by JavaScript -->
+                  </div>
+                  <div class="invalid-feedback"></div>
+              </div>
+            </div>
+                      
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary modal-close" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary brand-bg-color">Add Room</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

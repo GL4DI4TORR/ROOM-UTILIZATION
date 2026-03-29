@@ -1,0 +1,111 @@
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Add Class Details</h5>
+          <button type="button" class="btn-close modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div> 
+        <form action="" method="post" id="form-add">
+          <div class="modal-body">
+     
+            <div style="padding-left: 8px;">
+                <div class="mb-2">
+                    <div class="alert alert-danger d-none" id="general-error"></div>
+                </div>
+
+                <div class="mb-2">
+                    <label for="class-id" class="form-label">Class Code ID</label>
+                    <input type="text" class="form-control" id="class-id" name="class-id" placeholder="Enter class code (e.g., ABC123)">
+                    <div class="invalid-feedback"></div>
+                </div>
+
+                <br>
+                
+                <div class="mb-0">
+                    <P class="form-label">Subject</P>
+                    <div class="dropdown">
+                        <input type="text" class="form-control dropdown-input" placeholder="Select or search..." id="dropdown-subject" name="subject">
+                        <input type="hidden" id="hidden-subject-id" name="subject-id"/>
+                        <div class="dropdown-list" id="dropdown-list-subject">
+                            <!-- Options will be populated here by JavaScript -->
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="ms-5 mb-2">
+                    <div class="mb-0 me-2 d-flex gap-2 subject-type">
+                        <P class="form-label mb-0 me-2">Subject Type:</P><br>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <label for="LEC" class="form-label mb-0 me-2">LEC</label>
+                            <input type="checkbox" id="LEC" value="LEC" name="subject-type[]">
+                        </div>
+                        
+                        <div class="d-flex justify-content-center align-items-center">
+                            <label for="LAB" class="form-label mb-0 me-2">LAB</label>
+                            <input type="checkbox" id="LAB" value="LAB" name="subject-type[]">
+                        </div>
+                    </div>
+    
+                    <div class="invalid-feedback"></div>
+                </div>
+
+                <br>
+
+                <div class="mb-2">
+                    <P class="form-label">Section</P>
+                    <div class="dropdown">
+                        <input type="text" class="form-control dropdown-input" placeholder="Select or search..." id="dropdown-section" name="section">
+                        <input type="hidden" id="hidden-section-id" name="section-id"/>
+                        <div class="dropdown-list" id="dropdown-list-section">
+                            <!-- Options will be populated here by JavaScript -->
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="mb-2">
+                    <P class="form-label">Teacher Assigned</P>
+                    <select class="form-control" id="dropdown-teacher" name="teacher-assigned">
+                        <option value="">Select a teacher...</option>
+                        <option value="1">Teacher 1</option>
+                        <option value="2">Teacher 2</option>
+                        <option value="3">Teacher 3</option>
+                        <option value="4">Teacher 4</option>
+                        <option value="5">Teacher 5</option>
+                    </select>
+                    <div class="invalid-feedback"></div>
+                </div>
+                
+                <br>
+                
+                <div class="mb-2" id="div-teacher" style="display: none;">
+                    <input type="hidden" id="determiner" name="determiner" value="false">
+                    <P class="form-label">Teacher Assigned (LAB)</P>
+                    <div class="dropdown">
+                        <input type="text" class="form-control dropdown-input" placeholder="Select or search..." id="dropdown-teacher-lab" name="teacher-lab">
+                        <input type="hidden" id="hidden-teacher-assigned-lab" name="teacher-assigned-lab" disabled/>
+                        <div class="dropdown-list" id="dropdown-list-teacher-lab">
+                            <!-- Options will be populated here by JavaScript -->
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </div>
+
+
+            </div>
+
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary modal-close" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary brand-bg-color">Add Class Details</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

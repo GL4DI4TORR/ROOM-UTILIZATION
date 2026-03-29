@@ -1,0 +1,29 @@
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" data-id="">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header delete">
+                <h5 class="modal-title delete" id="staticBackdropLabel">WARNING! DELETE</h5>
+                <button type="button" class="btn-close modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div> 
+            <form action="" method="post" id="form-delete">
+                <div class="mb-2 modal-body d-flex flex-column delete">
+                    <div class="icon delete"></div>
+                        <p class="form-label">WARNING! Deleting this class will completely delete this data from the database. All Scheduled time and day assigned to this class will also be deleted.</p>
+                        <input type="hidden" id="hidden-class-id" name="class-id">
+                        <input type="hidden" id="hidden-subtype-id" name="subtype-id">
+                        <!-- <input type="hidden" id="hidden-section-id" name="section-id">
+                        <input type="hidden" id="hidden-teacher-assigned" name="teacher-assigned">
+                        <input type="hidden" id="hidden-room-id" name="room-id"> -->
+                    </div>
+                    <div class="modal-footer delete">
+                        <button type="button" class="btn btn-secondary modal-close" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary brand-bg-color">Delete</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+  

@@ -1,0 +1,62 @@
+<!-- Schedule Class Modal -->
+<div class="modal fade" id="scheduleClassModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="scheduleClassModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scheduleClassModalLabel">Schedule Class</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="schedule-class-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="schedule-class-id" class="form-label">Class ID</label>
+                        <select class="form-select" id="schedule-class-id" name="class-id" required>
+                            <option value="">Select class...</option>
+                        </select>
+                        <small class="form-text text-muted">Pick the class (this provides `class_id` and `subject_type` required by the schedule)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule-subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="schedule-subject" name="subject" placeholder="Enter subject name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule-section" class="form-label">Section</label>
+                        <input type="text" class="form-control" id="schedule-section" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule-day" class="form-label">Day</label>
+                        <select class="form-select" id="schedule-day" name="day" required>
+                            <option value="">Select day...</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedule-room" class="form-label">Room</label>
+                        <select class="form-select" id="schedule-room" name="room" required>
+                            <option value="">Select room...</option>
+                        </select>
+                        <small class="form-text text-muted">Current room: <span id="current-room-info"></span></small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="schedule-start-time" class="form-label">Start Time</label>
+                            <input type="time" class="form-control" id="schedule-start-time" name="start-time" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="schedule-end-time" class="form-label">End Time</label>
+                            <input type="time" class="form-control" id="schedule-end-time" name="end-time" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Schedule Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

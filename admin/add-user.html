@@ -1,0 +1,57 @@
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Add User</h5>
+          <button type="button" class="btn-close modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div> 
+        <form action="" method="post" id="form-add-user">
+          <div class="modal-body">
+            <div class="mb-2">
+              <div class="alert alert-danger d-none" id="general-error"></div>
+            </div>
+
+            <div class="mb-2">
+              <label for="user-id" class="form-label">Student ID</label>
+              <input type="text" class="form-control" id="user-id" name="user-id">
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <div class="mb-2">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="username" name="username">
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <label for="is-admin" class="form-label">Admin Properties</label>
+                <select id="is-admin" name="is-admin" class="form-select">
+                  <option value="0" selected>No</option>
+                  <option value="1">Yes</option>
+                </select>
+                <div class="invalid-feedback"></div>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label for="is-staff" class="form-label">Staff Properties</label>
+                <select id="is-staff" name="is-staff" class="form-select">
+                  <option value="0" selected>No</option>
+                  <option value="1">Yes</option>
+                </select>
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary modal-close" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary brand-bg-color">Add User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+
